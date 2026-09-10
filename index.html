@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Does it get in? — permeability to occupancy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0D143E; --indigo:#5364F1; --teal:#50CBC3; --pale:#D1EEEC;
+  --yellow:#FBC942; --red:#E34539; --paper:#F9F9F9;
+  --ink:#0D143E; --ink-60:rgba(13,20,62,.62); --ink-35:rgba(13,20,62,.5);
+  --rule:rgba(13,20,62,.14);
+  --sans:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper); color:var(--ink); font-family:var(--sans);
+  font-weight:300; line-height:1.55; -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+.wrap{max-width:1220px;margin:0 auto;padding:32px 24px 80px}
+
+/* ---------- masthead ---------- */
+.mast{display:flex;justify-content:space-between;align-items:flex-end;gap:32px;flex-wrap:wrap;
+  border-bottom:2px solid var(--navy);padding-bottom:18px;margin-bottom:28px}
+.mast h1{font-size:clamp(28px,4.2vw,46px);font-weight:600;letter-spacing:-.025em;line-height:1.02;margin:0}
+.mast p{margin:10px 0 0;max-width:52ch;font-size:15px;color:var(--ink-60)}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+.presets button{font-family:var(--sans);font-size:12.5px;font-weight:400;color:var(--ink);
+  background:transparent;border:1px solid var(--rule);border-radius:999px;padding:6px 13px;cursor:pointer}
+.presets button:hover{border-color:var(--indigo);color:var(--indigo)}
+.presets button:focus-visible{outline:2px solid var(--indigo);outline-offset:2px}
+.presets button.sharebtn{border-color:var(--indigo);color:var(--indigo);font-weight:500}
+.presets button.sharebtn:hover{background:var(--indigo);color:#fff}
+.presets button.sharebtn.ok{border-color:var(--teal);color:var(--navy);background:var(--pale)}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:322px 1fr;gap:34px;align-items:start}
+@media(max-width:940px){.shell{grid-template-columns:1fr}}
+
+/* ---------- controls ---------- */
+.grp{margin-bottom:26px}
+.grp > h2{font-size:13px;font-weight:600;margin:0 0 2px;letter-spacing:.01em}
+.grp > .hint{font-size:11.5px;color:var(--ink-35);margin:0 0 12px}
+.ctl{margin-bottom:15px}
+.ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:3px}
+.ctl label{font-size:12.5px;font-weight:400;color:var(--ink-60)}
+.ctl .val{font-size:13px;font-weight:500;color:var(--ink)}
+input[type=range]{width:100%;height:20px;background:transparent;cursor:pointer;-webkit-appearance:none;appearance:none;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--rule)}
+input[type=range]::-moz-range-track{height:2px;background:var(--rule)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--indigo);margin-top:-6px;border:none}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--indigo);border:none}
+input[type=range]:focus-visible{outline:2px solid var(--indigo);outline-offset:4px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.num{width:100%;font-family:var(--sans);font-size:13px;font-weight:400;color:var(--ink);
+  border:1px solid var(--rule);background:#fff;border-radius:4px;padding:5px 8px}
+.num:focus-visible{outline:2px solid var(--indigo);outline-offset:1px}
+
+/* ---------- hero panel ---------- */
+.hero{background:var(--navy);border-radius:14px;padding:24px 26px 20px;color:#fff;position:relative;overflow:hidden}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:6px}
+.verdict{font-size:19px;font-weight:500;letter-spacing:-.01em;line-height:1.3;max-width:46ch;margin:0}
+.verdict .mark{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:9px;vertical-align:1px}
+.verdict-sub{font-size:13px;color:rgba(255,255,255,.6);margin:6px 0 0;max-width:56ch}
+.runbtn{font-family:var(--sans);font-size:12.5px;font-weight:400;color:var(--navy);background:var(--teal);
+  border:none;border-radius:999px;padding:8px 17px;cursor:pointer;white-space:nowrap}
+.runbtn:hover{background:var(--pale)}
+.runbtn:focus-visible{outline:2px solid var(--pale);outline-offset:3px}
+.readouts{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:20px;
+  border-top:1px solid rgba(255,255,255,.16);padding-top:16px}
+@media(max-width:620px){.readouts{grid-template-columns:1fr;gap:14px}}
+.ro .k{font-size:11.5px;color:rgba(255,255,255,.52);margin:0 0 2px}
+.ro .v{font-size:26px;font-weight:500;letter-spacing:-.02em;line-height:1.1;margin:0}
+.ro .v small{font-size:14px;font-weight:300;color:rgba(255,255,255,.6);margin-left:3px}
+
+/* ---------- panels ---------- */
+.panel{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:20px 22px;margin-top:20px}
+.panel h3{font-size:14px;font-weight:600;margin:0 0 3px}
+.panel .hint{font-size:12px;color:var(--ink-35);margin:0 0 16px;max-width:64ch}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+@media(max-width:860px){.two{grid-template-columns:1fr}}
+.two .panel{margin-top:0}
+
+/* ---------- limiting bars ---------- */
+.lev{display:grid;grid-template-columns:132px 1fr 58px;align-items:center;gap:12px;margin-bottom:7px;font-size:12.5px}
+.lev .name{color:var(--ink-60)}
+.lev .track{height:9px;background:rgba(13,20,62,.06);border-radius:2px;position:relative;overflow:hidden}
+.lev .fill{position:absolute;left:0;top:0;bottom:0;background:var(--indigo);border-radius:2px;transition:width .3s ease}
+.lev .fill.top{background:var(--teal)}
+.lev .amt{text-align:right;font-weight:500}
+
+/* ---------- notes ---------- */
+details{margin-top:26px;border-top:1px solid var(--rule);padding-top:18px}
+summary{cursor:pointer;font-size:13.5px;font-weight:500;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:'+';display:inline-block;width:16px;color:var(--indigo);font-weight:600}
+details[open] summary::before{content:'–'}
+details .body{font-size:13.5px;color:var(--ink-60);max-width:74ch;margin-top:14px}
+details .body p{margin:0 0 12px}
+details .body code{background:rgba(83,100,241,.09);color:var(--indigo);padding:1px 5px;border-radius:3px;
+  font-family:ui-monospace,monospace;font-size:12.5px}
+.eq{background:rgba(13,20,62,.04);border-left:2px solid var(--indigo);padding:12px 15px;margin:0 0 14px;
+  font-family:ui-monospace,monospace;font-size:12.5px;color:var(--ink);line-height:1.75;overflow-x:auto}
+.warn{color:var(--ink);background:rgba(251,201,66,.16);border-left:2px solid var(--yellow);
+  padding:11px 15px;font-size:12.5px;margin-top:14px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="mast">
+  <div>
+    <h1>Does it actually get in?</h1>
+    <p>Passive permeability sets how fast a cyclic peptide equilibrates across the membrane. Affinity and the losses on the way set how much target it holds once it is there. Move anything and watch the rest follow.</p>
+  </div>
+  <div class="presets" id="presets"></div>
+</div>
+
+<div class="shell">
+
+  <!-- ================= CONTROLS ================= -->
+  <div>
+    <div class="grp">
+      <h2>The molecule</h2>
+      <p class="hint">What you designed and measured.</p>
+      <div class="ctl"><div class="row"><label for="s_logPe">Permeability, logPe</label><span class="val" id="v_logPe"></span></div><input type="range" id="s_logPe" min="-9" max="-4" step="0.05"></div>
+      <div class="ctl"><div class="row"><label for="s_kd">Binding affinity, K<sub>D</sub></label><span class="val" id="v_kd"></span></div><input type="range" id="s_kd" min="0" max="1000"></div>
+      <div class="ctl"><div class="row"><label for="s_thalf">Stability in medium, t½</label><span class="val" id="v_thalf"></span></div><input type="range" id="s_thalf" min="0" max="1000"></div>
+    </div>
+
+    <div class="grp">
+      <h2>The experiment</h2>
+      <p class="hint">What you set up in the well.</p>
+      <div class="ctl"><div class="row"><label for="s_dose">Dose in medium</label><span class="val" id="v_dose"></span></div><input type="range" id="s_dose" min="0" max="1000"></div>
+      <div class="ctl"><div class="row"><label for="s_inc">Incubation</label><span class="val" id="v_inc"></span></div><input type="range" id="s_inc" min="0" max="1000"></div>
+      <div class="ctl"><div class="row"><label for="s_va">Cell volume / surface</label><span class="val" id="v_va"></span></div><input type="range" id="s_va" min="0.5" max="5" step="0.1"></div>
+      <div class="pair">
+        <div><div class="row"><label for="n_cells">Cells per well</label></div><input class="num" type="number" id="n_cells" min="100" step="1000"></div>
+        <div><div class="row"><label for="n_vol">Medium, µL</label></div><input class="num" type="number" id="n_vol" min="10" step="10"></div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <h2>What you lose on the way</h2>
+      <p class="hint">These act on concentration, not on speed.</p>
+      <div class="ctl"><div class="row"><label for="s_fu">Free fraction in medium</label><span class="val" id="v_fu"></span></div><input type="range" id="s_fu" min="0" max="1000"></div>
+      <div class="ctl"><div class="row"><label for="s_er">Efflux ratio</label><span class="val" id="v_er"></span></div><input type="range" id="s_er" min="0" max="1000"></div>
+      <div class="ctl"><div class="row"><label for="s_fuc">Free fraction in cytosol</label><span class="val" id="v_fuc"></span></div><input type="range" id="s_fuc" min="0" max="1000"></div>
+    </div>
+
+    <div class="grp">
+      <h2>The target</h2>
+      <p class="hint">Abundance buffers the approach to steady state.</p>
+      <div class="ctl"><div class="row"><label for="s_tgt">Target concentration</label><span class="val" id="v_tgt"></span></div><input type="range" id="s_tgt" min="0" max="1000"></div>
+      <div class="ctl"><div class="row"><label for="s_goal">Occupancy you want</label><span class="val" id="v_goal"></span></div><input type="range" id="s_goal" min="5" max="99" step="1"></div>
+    </div>
+  </div>
+
+  <!-- ================= OUTPUT ================= -->
+  <div>
+    <div class="hero">
+      <div class="hero-top">
+        <div>
+          <p class="verdict" id="verdict"></p>
+          <p class="verdict-sub" id="verdictSub"></p>
+        </div>
+        <button class="runbtn" id="run">Run the incubation</button>
+      </div>
+      <svg id="cellsvg" viewBox="0 0 700 218" style="width:100%;height:auto;margin-top:14px" role="img" aria-label="Cross-section showing medium, membrane and cytosol"></svg>
+      <div class="readouts">
+        <div class="ro"><p class="k">Free in cytosol at steady state</p><p class="v" id="ro1"></p></div>
+        <div class="ro"><p class="k">Occupancy at steady state</p><p class="v" id="ro2"></p></div>
+        <div class="ro"><p class="k" id="ro3k">Time to reach your goal</p><p class="v" id="ro3"></p></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Occupancy over time</h3>
+      <p class="hint">Log time axis. The dashed line is your goal, the shaded band is everything past the end of your incubation.</p>
+      <svg id="chart1" viewBox="0 0 720 260" style="width:100%;height:auto" role="img" aria-label="Target occupancy against time"></svg>
+    </div>
+
+    <div class="two">
+      <div class="panel">
+        <h3>How permeable does it need to be?</h3>
+        <p class="hint">Time to reach your goal, swept across logPe. Everything else held where you set it.</p>
+        <svg id="chart2" viewBox="0 0 360 240" style="width:100%;height:auto" role="img" aria-label="Time to goal against permeability"></svg>
+        <p style="font-size:13px;margin:12px 0 0" id="minlogpe"></p>
+      </div>
+      <div class="panel">
+        <h3>What is actually holding you back</h3>
+        <p class="hint">Occupancy gained at the end of the incubation if you improved one thing and left the rest alone.</p>
+        <div id="levers"></div>
+        <p style="font-size:12.5px;color:var(--ink-60);margin:14px 0 0" id="massbal"></p>
+      </div>
+    </div>
+
+    <details>
+      <summary>The model, and what it assumes</summary>
+      <div class="body">
+        <p>The cell is one well-mixed compartment behind one membrane. Flux is passive and proportional to the concentration difference in free drug.</p>
+        <div class="eq">k = Pe / (V/A)<sub>cell</sub>          rate constant, 1/s
+τ = 1 / (k · ER)               time constant, unbuffered
+dL/dt = k · (C<sub>med,free</sub> − ER · L<sub>free</sub>) − k<sub>deg</sub> · L
+L = L<sub>free</sub>/f<sub>u,cell</sub> + [T] · L<sub>free</sub>/(L<sub>free</sub> + K<sub>D</sub>)
+occupancy = L<sub>free</sub> / (L<sub>free</sub> + K<sub>D</sub>)</div>
+        <p><code>L</code> is total drug inside, <code>L_free</code> is what the target sees. Medium is a fixed reservoir decaying only by the stability half-life.</p>
+        <p>Three consequences worth arguing about with the bench:</p>
+        <p>1. Permeability sets the <em>rate</em>, not the endpoint. Without efflux, steady-state free cytosol equals free medium whatever logPe is. Below about −8 the equilibration time finally exceeds a working day, and that is the only reason a low logPe kills a plate experiment.</p>
+        <p>2. Efflux is different in kind from every other loss. It is the one mechanism that makes cytosol lower than medium at steady state rather than just slower to get there. It also speeds equilibration, because it adds to the total rate of leaving.</p>
+        <p>3. Target abundance does not change steady-state occupancy. It buffers the approach, so a high-abundance target takes longer to load, but it lands in the same place. Abundance only caps you if the wells run out of compound, which the mass-balance line checks.</p>
+        <div class="warn">Not modelled: active uptake, endocytosis and endosomal entrapment, lysosomal trapping, pH partitioning, membrane potential opposing a charged species, intracellular metabolism, or binding kinetics slower than transport. Endosomal uptake is the important omission for live-cell PELSA, since it produces cell-associated compound that engages target only after lysis.</div>
+      </div>
+    </details>
+  </div>
+</div>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const LN2=Math.LN2;
+
+/* ---------- log-scaled slider helpers (0..1000 -> value) ---------- */
+const logmap=(lo,hi)=>({
+  toVal:s=>lo*Math.pow(hi/lo,s/1000),
+  toSlider:v=>1000*Math.log(v/lo)/Math.log(hi/lo)
+});
+const M={
+  kd:logmap(0.05,10000),      // nM
+  thalf:logmap(0.1,2000),     // h  (top of range = treat as stable)
+  dose:logmap(0.01,200),      // uM
+  inc:logmap(0.083,48),       // h
+  fu:logmap(0.001,1),         // fraction
+  er:logmap(1,200),           // ratio
+  fuc:logmap(0.01,1),         // fraction
+  tgt:logmap(0.005,100)       // uM
+};
+
+/* ---------- state ---------- */
+const S={logPe:-7,kd:50,thalf:2000,dose:1,inc:6,va:2,cells:20000,vol:100,
+         fu:1,er:1,fuc:1,tgt:2,goal:60};
+
+/* ---------- shareable URL state ----------
+   State lives in the hash (never the query string), so it is never sent to a
+   server and cannot land in an access log. Values are clamped to each control's
+   range on read, so a hand-edited or stale link can never push a slider out of
+   bounds or move another control. */
+const RANGE={logPe:[-9,-4],kd:[0.05,10000],thalf:[0.1,2000],dose:[0.01,200],
+  inc:[0.083,48],va:[0.5,5],fu:[0.001,1],er:[1,200],fuc:[0.01,1],tgt:[0.005,100],
+  goal:[5,99],cells:[100,1e9],vol:[10,1e6]};
+const URLKEYS=Object.keys(RANGE);
+const clampVal=(k,v)=>{const[lo,hi]=RANGE[k];return Math.min(hi,Math.max(lo,v));};
+
+function encodeState(){
+  const p=new URLSearchParams();
+  URLKEYS.forEach(k=>p.set(k,String(Math.round(S[k]*1e4)/1e4)));
+  return p.toString();
+}
+function applyStateFromURL(){
+  const h=location.hash.replace(/^#/,"");
+  if(!h)return false;
+  const p=new URLSearchParams(h);let any=false;
+  URLKEYS.forEach(k=>{
+    if(!p.has(k))return;
+    const v=parseFloat(p.get(k));
+    if(isFinite(v)){S[k]=clampVal(k,v);any=true;}
+  });
+  return any;
+}
+function syncURL(){
+  // replaceState, so live sliding never floods the back button
+  history.replaceState(null,"","#"+encodeState());
+}
+
+/* ---------- formatting ---------- */
+function fmtTime(s){
+  if(!isFinite(s))return"never";
+  if(s<90)return s.toFixed(s<10?1:0)+" s";
+  if(s<5400)return(s/60).toFixed(s<600?1:0)+" min";
+  if(s<172800)return(s/3600).toFixed(s<36000?1:0)+" h";
+  return(s/86400).toFixed(1)+" d";
+}
+function fmtConc(uM){
+  if(uM>=0.995)return{n:uM.toFixed(uM<10?2:1),u:"µM"};
+  if(uM>=0.001)return{n:(uM*1000).toFixed(uM*1000<10?1:0),u:"nM"};
+  return{n:(uM*1e6).toFixed(0),u:"pM"};
+}
+const concStr=uM=>{const c=fmtConc(uM);return c.n+" "+c.u;};
+
+/* ---------- binding: total intracellular -> free ---------- */
+function freeFromTotal(L,tgt,kd,fuc){
+  if(L<=0)return 0;
+  let lo=0,hi=L*fuc;
+  for(let i=0;i<48;i++){
+    const m=0.5*(lo+hi);
+    const tot=m/fuc+tgt*m/(m+kd);
+    if(tot<L)lo=m;else hi=m;
+  }
+  return 0.5*(lo+hi);
+}
+
+/* ---------- simulate ---------- */
+/* returns {t:[], occ:[], free:[], tGoal, occAt(t)} ; concentrations in uM, time in s */
+function simulate(p,opts){
+  opts=opts||{};
+  const tMax=opts.tMax||172800;                 // 48 h
+  const goalFrac=p.goal/100;
+  const Pe=Math.pow(10,p.logPe);
+  const r=p.va*1e-4;                            // cm
+  const k=Pe/r;                                 // 1/s
+  const kdeg=p.thalf>=1999?0:LN2/(p.thalf*3600);
+  const kdUM=p.kd/1000;
+  const cMed0=p.dose*p.fu;
+
+  const tau=1/(k*p.er);
+  let dt=Math.max(tau/300,1e-4), t=0, L=0;
+  const T=[0],O=[0],F=[0];
+  let tGoal=Infinity, steps=0;
+  const maxSteps=opts.fast?6000:30000;
+
+  while(t<tMax&&steps<maxSteps){
+    const cMed=cMed0*(kdeg?Math.exp(-kdeg*t):1);
+    const lf=freeFromTotal(L,p.tgt,kdUM,p.fuc);
+    const dL=k*(cMed-p.er*lf)-kdeg*L;
+    L=Math.max(0,L+dL*dt);
+    t+=dt;
+    const lf2=freeFromTotal(L,p.tgt,kdUM,p.fuc);
+    const occ=lf2/(lf2+kdUM);
+    if(!isFinite(tGoal)&&occ>=goalFrac){
+      const prevOcc=O[O.length-1];
+      const f=(goalFrac-prevOcc)/Math.max(occ-prevOcc,1e-12);
+      tGoal=T[T.length-1]+f*dt;
+      if(opts.fast)return{tGoal:tGoal};
+    }
+    T.push(t);O.push(occ);F.push(lf2);
+    dt=Math.min(dt*1.02,tMax/400);
+    steps++;
+  }
+  return{t:T,occ:O,free:F,tGoal:tGoal,
+    occAt(x){let i=0;while(i<T.length-1&&T[i]<x)i++;return O[Math.max(0,i)];}};
+}
+
+function steadyState(p){
+  const kdUM=p.kd/1000;
+  const lf=p.dose*p.fu/p.er;
+  return{free:lf,occ:lf/(lf+kdUM)};
+}
+
+/* ================= RENDER ================= */
+const svgNS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){
+  const n=document.createElementNS(svgNS,tag);
+  for(const a in attrs)n.setAttribute(a,attrs[a]);
+  if(parent)parent.appendChild(n);
+  return n;
+}
+function clear(n){while(n.firstChild)n.removeChild(n.firstChild);}
+
+/* ---- hero cross-section ---- */
+function drawCell(p,frac){
+  const svg=$("cellsvg");clear(svg);
+  const ss=steadyState(p);
+  const sim=CUR.sim;
+  const idx=Math.min(sim.t.length-1,Math.round(frac*(sim.t.length-1)));
+  const freeNow=sim.free[idx],occNow=sim.occ[idx];
+  const top=18,h=126,base=top+h,cw=92;
+  const F="Poppins,sans-serif";
+  const ref=Math.max(p.dose,1e-9);
+  const hgt=v=>Math.max(0,Math.min(1,v/ref))*h;
+  const txt=(x,y,t,fill,size,weight)=>{
+    const n=el("text",{x:x,y:y,fill:fill,"font-size":size,"font-family":F,"font-weight":weight||"300"},svg);
+    n.textContent=t;return n;};
+
+  // ---- medium ----
+  const mxA=36;
+  el("rect",{x:mxA,y:top,width:cw,height:h,fill:"rgba(255,255,255,.07)",rx:3},svg);
+  el("rect",{x:mxA,y:base-hgt(p.dose),width:cw,height:hgt(p.dose),fill:"rgba(255,255,255,.2)",rx:3},svg);
+  el("rect",{x:mxA,y:base-hgt(p.dose*p.fu),width:cw,height:hgt(p.dose*p.fu),fill:"#5364F1",rx:3},svg);
+  txt(mxA,base+20,"Medium","rgba(255,255,255,.5)","11.5");
+  txt(mxA,base+37,concStr(p.dose*p.fu)+" free","#fff","13","500");
+  if(p.fu<0.99)txt(mxA,base+52,"of "+concStr(p.dose)+" dosed","rgba(255,255,255,.45)","11");
+
+  // ---- bilayer ----
+  const bx=164;
+  el("rect",{x:bx,y:top-6,width:24,height:h+12,fill:"rgba(209,238,236,.12)",rx:3},svg);
+  for(let i=0;i<10;i++){
+    const yy=top+2+i*(h-4)/9;
+    el("circle",{cx:bx+6,cy:yy,r:2.9,fill:"#D1EEEC","fill-opacity":.65},svg);
+    el("circle",{cx:bx+18,cy:yy,r:2.9,fill:"#D1EEEC","fill-opacity":.65},svg);
+  }
+  txt(bx-6,base+20,"bilayer","rgba(255,255,255,.38)","11");
+
+  // flux arrow
+  const flux=Math.max(0,(p.dose*p.fu-p.er*freeNow)/Math.max(p.dose*p.fu,1e-9));
+  if(flux>0.01){
+    const ay=top+h/2, o=.3+flux*.55;
+    el("path",{d:`M${bx-18} ${ay} L${bx+40} ${ay}`,stroke:"#FBC942","stroke-width":Math.max(1.2,flux*6),
+      "stroke-opacity":o,"stroke-linecap":"round"},svg);
+    el("path",{d:`M${bx+34} ${ay-5.5} L${bx+43} ${ay} L${bx+34} ${ay+5.5} Z`,fill:"#FBC942","fill-opacity":o},svg);
+  }
+
+  // ---- cytosol ----
+  const cx=212;
+  el("rect",{x:cx,y:top,width:cw,height:h,fill:"rgba(255,255,255,.07)",rx:3},svg);
+  el("rect",{x:cx,y:base-hgt(freeNow),width:cw,height:hgt(freeNow),fill:"#5364F1",rx:3},svg);
+  const yc=base-hgt(ss.free);
+  el("path",{d:`M${cx-4} ${yc} L${cx+cw+4} ${yc}`,stroke:"#D1EEEC","stroke-width":1.2,"stroke-dasharray":"3 3","stroke-opacity":.75},svg);
+  txt(cx+cw+8,yc+4,"ceiling","rgba(255,255,255,.5)","10.5");
+  txt(cx,base+20,"Cytosol","rgba(255,255,255,.5)","11.5");
+  txt(cx,base+37,concStr(freeNow)+" free","#fff","13","500");
+
+  // ---- occupancy ----
+  const ox=386,ow=270;
+  txt(ox,top+9,"Target occupied","rgba(255,255,255,.5)","11.5");
+  el("rect",{x:ox,y:top+18,width:ow,height:22,fill:"rgba(255,255,255,.1)",rx:3},svg);
+  el("rect",{x:ox,y:top+18,width:ow*occNow,height:22,fill:"#50CBC3",rx:3},svg);
+  const gx=ox+ow*(p.goal/100);
+  el("path",{d:`M${gx} ${top+12} L${gx} ${top+46}`,stroke:"#FBC942","stroke-width":2},svg);
+  txt(gx+5,top+56,"goal "+p.goal+"%","#FBC942","10.5");
+  txt(ox,top+92,(occNow*100).toFixed(1)+"%","#fff","30","500");
+  txt(ox,top+112,"settles at "+(ss.occ*100).toFixed(0)+"% \u00b7 K"+"\u1d05"+" "+(p.kd<1000?p.kd.toFixed(p.kd<10?2:0)+" nM":(p.kd/1000).toFixed(1)+" \u00b5M"),"rgba(255,255,255,.5)","11.5");
+  txt(ox,base+20,"Elapsed","rgba(255,255,255,.5)","11.5");
+  txt(ox,base+37,fmtTime(sim.t[idx])+" of "+fmtTime(p.inc*3600),"#fff","13","500");
+}
+
+/* ---- chart 1: occupancy vs time ---- */
+function drawChart1(p){
+  const svg=$("chart1");clear(svg);
+  const W=720,H=260,L=46,R=14,T=14,B=34;
+  const x0=Math.log10(1),x1=Math.log10(172800);
+  const X=t=>L+(Math.log10(Math.max(t,1))-x0)/(x1-x0)*(W-L-R);
+  const Y=o=>T+(1-o)*(H-T-B);
+
+  // incubation shading
+  const xi=X(p.inc*3600);
+  el("rect",{x:xi,y:T,width:Math.max(0,W-R-xi),height:H-T-B,fill:"rgba(13,20,62,.045)"},svg);
+  el("path",{d:`M${xi} ${T} L${xi} ${H-B}`,stroke:"#FBC942","stroke-width":1.5},svg);
+  const lblRight=xi<W-150;
+  el("text",{x:lblRight?xi+6:xi-6,y:T+13,fill:"rgba(13,20,62,.5)","font-size":"11","text-anchor":lblRight?"start":"end","font-family":"Poppins,sans-serif"},svg)
+    .textContent="end of incubation";
+
+  // axes
+  el("path",{d:`M${L} ${H-B} L${W-R} ${H-B}`,stroke:"rgba(13,20,62,.25)","stroke-width":1},svg);
+  [[60,"1 min"],[3600,"1 h"],[6*3600,"6 h"],[24*3600,"1 d"],[48*3600,"2 d"]].forEach(([t,lab])=>{
+    const x=X(t);
+    el("path",{d:`M${x} ${H-B} L${x} ${H-B+4}`,stroke:"rgba(13,20,62,.3)"},svg);
+    el("text",{x:x,y:H-B+18,fill:"rgba(13,20,62,.45)","font-size":"11","text-anchor":"middle","font-family":"Poppins,sans-serif"},svg).textContent=lab;
+  });
+  [0,.25,.5,.75,1].forEach(o=>{
+    const y=Y(o);
+    el("path",{d:`M${L} ${y} L${W-R} ${y}`,stroke:"rgba(13,20,62,.07)"},svg);
+    el("text",{x:L-8,y:y+4,fill:"rgba(13,20,62,.45)","font-size":"11","text-anchor":"end","font-family":"Poppins,sans-serif"},svg).textContent=(o*100)+"%";
+  });
+
+  // goal line
+  const yg=Y(p.goal/100);
+  el("path",{d:`M${L} ${yg} L${W-R} ${yg}`,stroke:"#50CBC3","stroke-width":1.5,"stroke-dasharray":"5 4"},svg);
+
+  // curve
+  const s=CUR.sim;
+  let d="";
+  for(let i=0;i<s.t.length;i++){
+    if(s.t[i]<1)continue;
+    d+=(d?"L":"M")+X(s.t[i]).toFixed(2)+" "+Y(s.occ[i]).toFixed(2)+" ";
+  }
+  el("path",{d:d,fill:"none",stroke:"#5364F1","stroke-width":2.4,"stroke-linejoin":"round"},svg);
+
+  // marker
+  if(isFinite(s.tGoal)&&s.tGoal>1){
+    el("circle",{cx:X(s.tGoal),cy:yg,r:5,fill:"#0D143E"},svg);
+    el("text",{x:X(s.tGoal)+9,y:yg-9,fill:"#0D143E","font-size":"12","font-weight":"500","font-family":"Poppins,sans-serif"},svg)
+      .textContent=fmtTime(s.tGoal);
+  }
+  CUR.chart1={X:X,Y:Y};
+}
+
+/* ---- chart 2: time to goal vs logPe ---- */
+function drawChart2(p){
+  const svg=$("chart2");clear(svg);
+  const W=360,H=240,L=44,R=12,T=12,B=32;
+  const X=lp=>L+(lp+9)/5*(W-L-R);
+  const y0=Math.log10(1),y1=Math.log10(172800);
+  const Y=t=>T+(1-(Math.log10(Math.min(Math.max(t,1),172800))-y0)/(y1-y0))*(H-T-B);
+
+  const pts=[];let minLP=null;
+  for(let lp=-9;lp<=-4.001;lp+=0.15){
+    const q=Object.assign({},p,{logPe:lp});
+    const r=simulate(q,{fast:true,tMax:172800});
+    pts.push([lp,r.tGoal]);
+    if(minLP===null&&isFinite(r.tGoal)&&r.tGoal<=p.inc*3600)minLP=lp;
+  }
+
+  // incubation band
+  const yi=Y(p.inc*3600);
+  el("rect",{x:L,y:yi,width:W-L-R,height:Math.max(0,H-B-yi),fill:"rgba(80,203,195,.16)"},svg);
+  el("text",{x:L+6,y:yi+14,fill:"rgba(13,20,62,.5)","font-size":"10.5","font-family":"Poppins,sans-serif"},svg)
+    .textContent="fits your incubation";
+
+  el("path",{d:`M${L} ${H-B} L${W-R} ${H-B}`,stroke:"rgba(13,20,62,.25)"},svg);
+  [-9,-8,-7,-6,-5,-4].forEach(lp=>{
+    const x=X(lp);
+    el("text",{x:x,y:H-B+17,fill:"rgba(13,20,62,.45)","font-size":"10.5","text-anchor":"middle","font-family":"Poppins,sans-serif"},svg).textContent=lp;
+  });
+  [[60,"1 min"],[3600,"1 h"],[86400,"1 d"]].forEach(([t,lab])=>{
+    const y=Y(t);
+    el("path",{d:`M${L} ${y} L${W-R} ${y}`,stroke:"rgba(13,20,62,.07)"},svg);
+    el("text",{x:L-6,y:y+4,fill:"rgba(13,20,62,.45)","font-size":"10.5","text-anchor":"end","font-family":"Poppins,sans-serif"},svg).textContent=lab;
+  });
+
+  let d="";
+  pts.forEach(([lp,t])=>{
+    if(!isFinite(t))return;
+    d+=(d?"L":"M")+X(lp).toFixed(2)+" "+Y(t).toFixed(2)+" ";
+  });
+  el("path",{d:d,fill:"none",stroke:"#5364F1","stroke-width":2.4},svg);
+
+  const cur=simulate(p,{fast:true});
+  if(isFinite(cur.tGoal))el("circle",{cx:X(p.logPe),cy:Y(cur.tGoal),r:5,fill:"#0D143E"},svg);
+  else el("path",{d:`M${X(p.logPe)} ${T} L${X(p.logPe)} ${H-B}`,stroke:"#E34539","stroke-width":1.5,"stroke-dasharray":"4 4"},svg);
+
+  el("text",{x:(L+W-R)/2,y:H-4,fill:"rgba(13,20,62,.4)","font-size":"10.5","text-anchor":"middle","font-family":"Poppins,sans-serif"},svg)
+    .textContent="logPe (cm/s)";
+
+  $("minlogpe").innerHTML = minLP===null
+    ? `<span style="color:#E34539">No permeability reaches ${p.goal}% here.</span> The ceiling is set by concentration, not by transport.`
+    : `Minimum permeability that still fits: <strong>logPe ${minLP.toFixed(1)}</strong>. Above that, more permeability buys you nothing.`;
+}
+
+/* ---- levers ---- */
+function drawLevers(p){
+  const box=$("levers");box.innerHTML="";
+  const base=simulate(p).occAt(p.inc*3600);
+  const variants=[
+    ["Permeability, +1 log",{logPe:Math.min(-4,p.logPe+1)}],
+    ["Affinity, 5× tighter",{kd:p.kd/5}],
+    ["Dose, 5× higher",{dose:p.dose*5}],
+    ["Serum binding removed",{fu:1}],
+    ["Efflux blocked",{er:1}],
+    ["Incubation, 4× longer",{inc:Math.min(48,p.inc*4)}],
+    ["Stability, 5× better",{thalf:Math.min(2000,p.thalf*5)}]
+  ];
+  const rows=variants.map(([name,ov])=>{
+    const q=Object.assign({},p,ov);
+    const g=simulate(q).occAt(q.inc*3600)-base;
+    return{name,g:Math.max(0,g)};
+  }).sort((a,b)=>b.g-a.g);
+  const max=Math.max(0.02,rows[0].g);
+  rows.forEach((r,i)=>{
+    const d=document.createElement("div");d.className="lev";
+    d.innerHTML=`<span class="name">${r.name}</span>
+      <span class="track"><span class="fill${i===0&&r.g>0.01?" top":""}" style="width:${(r.g/max*100).toFixed(1)}%"></span></span>
+      <span class="amt">${r.g<0.005?"–":"+"+(r.g*100).toFixed(0)+"%"}</span>`;
+    box.appendChild(d);
+  });
+
+  // mass balance
+  const cellVolL=p.cells*2e-12;
+  const sitesPmol=p.tgt*1e-6*cellVolL*1e12;
+  const dosePmol=p.dose*1e-6*(p.vol*1e-6)*1e12;
+  const pct=100*sitesPmol/Math.max(dosePmol,1e-12);
+  $("massbal").textContent = pct<15
+    ? `Reservoir check: target sites are ${pct.toFixed(1)}% of the compound in the well, so the medium is effectively infinite and abundance does not cap occupancy.`
+    : `Reservoir check: target sites are ${pct.toFixed(0)}% of the compound in the well. At this ratio you start depleting the medium, and abundance does cap occupancy. Raise the dose or the volume.`;
+}
+
+/* ---- verdict + readouts ---- */
+function drawVerdict(p){
+  const ss=steadyState(p);
+  const s=CUR.sim;
+  const occInc=s.occAt(p.inc*3600);
+  const c=fmtConc(ss.free);
+  $("ro1").innerHTML=c.n+"<small>"+c.u+"</small>";
+  $("ro2").innerHTML=(ss.occ*100).toFixed(1)+"<small>%</small>";
+
+  let color,head,sub;
+  if(ss.occ*100<p.goal){
+    color="#E34539";
+    $("ro3k").textContent="Goal is out of reach";
+    $("ro3").innerHTML="—";
+    head=`Concentration caps you at ${(ss.occ*100).toFixed(0)}%. Time will not fix this.`;
+    sub=`Free cytosolic settles at ${concStr(ss.free)} against a KD of ${p.kd} nM. Raise the dose, tighten affinity, or remove a loss term.`;
+  }else if(isFinite(s.tGoal)&&s.tGoal<=p.inc*3600){
+    color="#50CBC3";
+    $("ro3k").textContent="Time to reach your goal";
+    $("ro3").innerHTML=fmtTime(s.tGoal).replace(/ (\D+)$/,"<small> $1</small>");
+    const frac=s.tGoal/(p.inc*3600);
+    head=`Hits ${p.goal}% in ${fmtTime(s.tGoal)}, well inside your ${fmtTime(p.inc*3600)} incubation.`;
+    sub=frac<0.3
+      ? "You are using a fraction of the available time. Permeability is not the constraint here, so tune concentration and losses instead."
+      : "Comfortable, but not by much. Check that the compound survives the full incubation.";
+  }else{
+    color="#FBC942";
+    $("ro3k").textContent="Time to reach your goal";
+    $("ro3").innerHTML=isFinite(s.tGoal)?fmtTime(s.tGoal).replace(/ (\D+)$/,"<small> $1</small>"):"&gt;48<small>h</small>";
+    head=`Gets there eventually, but not in this window. You are at ${(occInc*100).toFixed(0)}% when you read out.`;
+    sub=`Reaching ${p.goal}% needs ${fmtTime(s.tGoal)}. Extend the incubation or improve permeability.`;
+  }
+  $("verdict").innerHTML=`<span class="mark" style="background:${color}"></span>${head}`;
+
+  // biology footnote
+  const o=Math.max(ss.occ*100,0);
+  let bio;
+  if(o>=85)bio="At this level a phenotypic endpoint is a fair ask.";
+  else if(o>=55)bio="Enough for a proximal readout such as PELSA or a phospho marker. Thin for a phenotype.";
+  else if(o>=25)bio="Detectable engagement, but too low to interpret a functional result cleanly.";
+  else bio="Below the level where an engagement readout is worth running.";
+  $("verdictSub").textContent=sub+" "+bio;
+}
+
+/* ================= WIRING ================= */
+const CUR={sim:null,anim:null};
+
+function readControls(){
+  S.logPe=+$("s_logPe").value;
+  S.kd=M.kd.toVal(+$("s_kd").value);
+  S.thalf=M.thalf.toVal(+$("s_thalf").value);
+  S.dose=M.dose.toVal(+$("s_dose").value);
+  S.inc=M.inc.toVal(+$("s_inc").value);
+  S.va=+$("s_va").value;
+  S.fu=M.fu.toVal(+$("s_fu").value);
+  S.er=M.er.toVal(+$("s_er").value);
+  S.fuc=M.fuc.toVal(+$("s_fuc").value);
+  S.tgt=M.tgt.toVal(+$("s_tgt").value);
+  S.goal=+$("s_goal").value;
+  S.cells=Math.max(100,+$("n_cells").value||20000);
+  S.vol=Math.max(10,+$("n_vol").value||100);
+}
+function writeControls(){
+  $("s_logPe").value=S.logPe;
+  $("s_kd").value=M.kd.toSlider(S.kd);
+  $("s_thalf").value=M.thalf.toSlider(S.thalf);
+  $("s_dose").value=M.dose.toSlider(S.dose);
+  $("s_inc").value=M.inc.toSlider(S.inc);
+  $("s_va").value=S.va;
+  $("s_fu").value=M.fu.toSlider(S.fu);
+  $("s_er").value=M.er.toSlider(S.er);
+  $("s_fuc").value=M.fuc.toSlider(S.fuc);
+  $("s_tgt").value=M.tgt.toSlider(S.tgt);
+  $("s_goal").value=S.goal;
+  $("n_cells").value=Math.round(S.cells);
+  $("n_vol").value=Math.round(S.vol);
+}
+function labels(){
+  const Pe=Math.pow(10,S.logPe);
+  const m=Pe.toExponential(1).split("e");
+  $("v_logPe").innerHTML=S.logPe.toFixed(2)+" <span style=\"color:rgba(13,20,62,.45);font-weight:300\">"+m[0]+"\u00d710<sup>"+(+m[1])+"</sup> cm/s</span>";
+  $("v_kd").textContent=S.kd<1000?S.kd.toFixed(S.kd<10?2:0)+" nM":(S.kd/1000).toFixed(1)+" µM";
+  $("v_thalf").textContent=S.thalf>=1999?"stable":(S.thalf<1?(S.thalf*60).toFixed(0)+" min":S.thalf.toFixed(S.thalf<10?1:0)+" h");
+  $("v_dose").textContent=concStr(S.dose);
+  $("v_inc").textContent=fmtTime(S.inc*3600);
+  $("v_va").textContent=S.va.toFixed(1)+" µm";
+  $("v_fu").textContent=S.fu>=0.999?"1.0 (serum-free)":S.fu.toFixed(S.fu<0.01?3:2);
+  $("v_er").textContent=S.er<1.05?"1 (none)":S.er.toFixed(S.er<10?1:0)+"×";
+  $("v_fuc").textContent=S.fuc>=0.999?"1.0":S.fuc.toFixed(2);
+  $("v_tgt").textContent=concStr(S.tgt);
+  $("v_goal").textContent=S.goal+"%";
+}
+
+function update(){
+  readControls();labels();syncURL();
+  CUR.sim=simulate(S);
+  drawVerdict(S);
+  drawCell(S,Math.min(1,fracOfIncubation()));
+  drawChart1(S);
+  drawChart2(S);
+  drawLevers(S);
+}
+function fracOfIncubation(){
+  const s=CUR.sim,target=S.inc*3600;
+  let i=0;while(i<s.t.length-1&&s.t[i]<target)i++;
+  return i/(s.t.length-1);
+}
+
+/* run animation */
+function runAnim(){
+  if(CUR.anim)cancelAnimationFrame(CUR.anim);
+  const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const end=fracOfIncubation();
+  if(reduce){drawCell(S,end);return;}
+  const dur=2600,t0=performance.now();
+  const step=now=>{
+    const u=Math.min(1,(now-t0)/dur);
+    drawCell(S,end*u);
+    if(u<1)CUR.anim=requestAnimationFrame(step);
+  };
+  CUR.anim=requestAnimationFrame(step);
+}
+
+/* presets */
+const PRESETS=[
+  ["Our PAMPA set",{logPe:-7.8,kd:50,dose:1,inc:6,fu:1,er:1,fuc:1,tgt:2,thalf:2000,goal:60}],
+  ["Add 10% FBS",{logPe:-7.8,kd:50,dose:1,inc:6,fu:0.08,er:1,fuc:1,tgt:2,thalf:2000,goal:60}],
+  ["Efflux substrate",{logPe:-7.8,kd:50,dose:1,inc:6,fu:0.08,er:8,fuc:1,tgt:2,thalf:2000,goal:60}],
+  ["Cyclosporin-like",{logPe:-5.5,kd:50,dose:1,inc:6,fu:0.05,er:3,fuc:0.3,tgt:2,thalf:2000,goal:60}],
+  ["Abundant target",{logPe:-7.8,kd:50,dose:1,inc:6,fu:1,er:1,fuc:1,tgt:40,thalf:2000,goal:60}]
+];
+PRESETS.forEach(([name,cfg])=>{
+  const b=document.createElement("button");
+  b.textContent=name;
+  b.onclick=()=>{Object.assign(S,cfg);writeControls();update();runAnim();};
+  $("presets").appendChild(b);
+});
+
+/* copy-link button: shares the current parameters as a URL */
+const shareBtn=document.createElement("button");
+shareBtn.className="sharebtn";
+shareBtn.type="button";
+shareBtn.textContent="Copy link";
+let shareTimer=null;
+shareBtn.onclick=async()=>{
+  syncURL();
+  try{await navigator.clipboard.writeText(location.href);}
+  catch(e){/* clipboard blocked (e.g. file://); the hash is still set to share manually */}
+  shareBtn.textContent="Link copied";
+  shareBtn.classList.add("ok");
+  clearTimeout(shareTimer);
+  shareTimer=setTimeout(()=>{shareBtn.textContent="Copy link";shareBtn.classList.remove("ok");},1600);
+};
+$("presets").appendChild(shareBtn);
+
+document.querySelectorAll("input").forEach(i=>i.addEventListener("input",update));
+$("run").addEventListener("click",runAnim);
+
+/* someone pasting a new link, or using back/forward, re-hydrates the controls */
+window.addEventListener("hashchange",()=>{
+  if(applyStateFromURL()){writeControls();update();}
+});
+
+/* boot: a shared link wins over the defaults */
+applyStateFromURL();
+writeControls();update();
+</script>
+</body>
+</html>
