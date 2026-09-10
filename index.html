@@ -87,6 +87,17 @@ input[type=range]:focus-visible{outline:2px solid var(--indigo);outline-offset:4
 @media(max-width:860px){.two{grid-template-columns:1fr}}
 .two .panel{margin-top:0}
 
+/* ---------- goal quick-pick ---------- */
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:3px}
+.panel-head h3{margin:0}
+.goalpick{display:flex;align-items:center;gap:6px}
+.goalpick .gp-label{font-size:11.5px;color:var(--ink-35)}
+.goalpick button{font-family:var(--sans);font-size:12px;font-weight:400;color:var(--ink-60);
+  background:transparent;border:1px solid var(--rule);border-radius:999px;padding:4px 10px;cursor:pointer}
+.goalpick button:hover{border-color:var(--indigo);color:var(--indigo)}
+.goalpick button.active{background:var(--indigo);border-color:var(--indigo);color:#fff;font-weight:500}
+.goalpick button:focus-visible{outline:2px solid var(--indigo);outline-offset:2px}
+
 /* ---------- limiting bars ---------- */
 .lev{display:grid;grid-template-columns:132px 1fr 58px;align-items:center;gap:12px;margin-bottom:7px;font-size:12.5px}
 .lev .name{color:var(--ink-60)}
@@ -182,7 +193,10 @@ details .body code{background:rgba(83,100,241,.09);color:var(--indigo);padding:1
     </div>
 
     <div class="panel">
-      <h3>Occupancy over time</h3>
+      <div class="panel-head">
+        <h3>Occupancy over time</h3>
+        <div class="goalpick" id="goalpick"><span class="gp-label">Goal occupancy</span></div>
+      </div>
       <p class="hint">Log time axis. The dashed line is your goal, the shaded band is everything past the end of your incubation.</p>
       <svg id="chart1" viewBox="0 0 720 260" style="width:100%;height:auto" role="img" aria-label="Target occupancy against time"></svg>
     </div>
@@ -635,6 +649,10 @@ function drawVerdict(p){
 
 /* ================= WIRING ================= */
 const CUR={sim:null,anim:null};
+let goalBtns=[];
+function syncGoalButtons(){
+  goalBtns.forEach(b=>b.classList.toggle("active",+b.dataset.goal===Math.round(S.goal)));
+}
 
 function readControls(){
   S.logPe=+$("s_logPe").value;
@@ -683,7 +701,7 @@ function labels(){
 }
 
 function update(){
-  readControls();labels();syncURL();
+  readControls();labels();syncURL();syncGoalButtons();
   CUR.sim=simulate(S);
   drawVerdict(S);
   drawCell(S,Math.min(1,fracOfIncubation()));
@@ -743,6 +761,17 @@ shareBtn.onclick=async()=>{
   shareTimer=setTimeout(()=>{shareBtn.textContent="Copy link";shareBtn.classList.remove("ok");},1600);
 };
 $("presets").appendChild(shareBtn);
+
+/* goal-occupancy quick-pick, next to the occupancy chart. Each button drives the
+   same `goal` state as the slider, so the goal line on chart 1 and the time-to-goal
+   curve and marker on chart 2 all move with it, and the slider stays in sync. */
+goalBtns=[50,60,80,90].map(g=>{
+  const b=document.createElement("button");
+  b.type="button";b.textContent=g+"%";b.dataset.goal=g;
+  b.onclick=()=>{S.goal=g;writeControls();update();};
+  $("goalpick").appendChild(b);
+  return b;
+});
 
 document.querySelectorAll("input").forEach(i=>i.addEventListener("input",update));
 $("run").addEventListener("click",runAnim);
