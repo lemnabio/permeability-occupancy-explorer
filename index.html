@@ -475,8 +475,10 @@ function drawChart1(p){
 
   // marker
   if(isFinite(s.tGoal)&&s.tGoal>1){
-    el("circle",{cx:X(s.tGoal),cy:yg,r:5,fill:"#0D143E"},svg);
-    el("text",{x:X(s.tGoal)+9,y:yg-9,fill:"#0D143E","font-size":"12","font-weight":"500","font-family":"Poppins,sans-serif"},svg)
+    const mx=X(s.tGoal);
+    el("circle",{cx:mx,cy:yg,r:5,fill:"#0D143E"},svg);
+    const lft=mx>W-64, hi=yg<T+18;
+    el("text",{x:lft?mx-9:mx+9,y:hi?yg+18:yg-9,fill:"#0D143E","font-size":"12","font-weight":"500","text-anchor":lft?"end":"start","font-family":"Poppins,sans-serif"},svg)
       .textContent=fmtTime(s.tGoal);
   }
   CUR.chart1={X:X,Y:Y};
@@ -509,7 +511,7 @@ function drawChart2(p){
     const x=X(lp);
     el("text",{x:x,y:H-B+17,fill:"rgba(13,20,62,.45)","font-size":"10.5","text-anchor":"middle","font-family":"Poppins,sans-serif"},svg).textContent=lp;
   });
-  [[60,"1 min"],[3600,"1 h"],[86400,"1 d"]].forEach(([t,lab])=>{
+  [[60,"1 min"],[3600,"1 h"],[86400,"1 d"],[172800,"2 d"]].forEach(([t,lab])=>{
     const y=Y(t);
     el("path",{d:`M${L} ${y} L${W-R} ${y}`,stroke:"rgba(13,20,62,.07)"},svg);
     el("text",{x:L-6,y:y+4,fill:"rgba(13,20,62,.45)","font-size":"10.5","text-anchor":"end","font-family":"Poppins,sans-serif"},svg).textContent=lab;
@@ -523,8 +525,24 @@ function drawChart2(p){
   el("path",{d:d,fill:"none",stroke:"#5364F1","stroke-width":2.4},svg);
 
   const cur=simulate(p,{fast:true});
-  if(isFinite(cur.tGoal))el("circle",{cx:X(p.logPe),cy:Y(cur.tGoal),r:5,fill:"#0D143E"},svg);
-  else el("path",{d:`M${X(p.logPe)} ${T} L${X(p.logPe)} ${H-B}`,stroke:"#E34539","stroke-width":1.5,"stroke-dasharray":"4 4"},svg);
+  const cx=X(p.logPe);
+  const overRange=!isFinite(cur.tGoal)||cur.tGoal>172800; // beyond the 2 d axis, one way or another
+  if(overRange){
+    // don't pin a clipped dot at the edge; flag it explicitly as off the top.
+    // "never" only if the steady-state ceiling is itself below the goal; otherwise
+    // it does get there, just past 2 d.
+    const reachable=steadyState(p).occ*100>=p.goal;
+    el("path",{d:`M${cx} ${T} L${cx} ${H-B}`,stroke:"#E34539","stroke-width":1.5,"stroke-dasharray":"4 4"},svg);
+    const lft=cx>W-52;
+    el("text",{x:lft?cx-6:cx+6,y:T+11,fill:"#E34539","font-size":"11","font-weight":"500","text-anchor":lft?"end":"start","font-family":"Poppins,sans-serif"},svg)
+      .textContent=reachable?"> 2 d":"never";
+  }else{
+    const cy=Math.min(H-B-2,Math.max(T+6,Y(cur.tGoal)));
+    el("circle",{cx:cx,cy:cy,r:5,fill:"#0D143E"},svg);
+    const lft=cx>W-70, hi=cy<T+18;
+    el("text",{x:lft?cx-9:cx+9,y:hi?cy+16:cy-9,fill:"#0D143E","font-size":"11","font-weight":"500","text-anchor":lft?"end":"start","font-family":"Poppins,sans-serif"},svg)
+      .textContent=fmtTime(cur.tGoal);
+  }
 
   el("text",{x:(L+W-R)/2,y:H-4,fill:"rgba(13,20,62,.4)","font-size":"10.5","text-anchor":"middle","font-family":"Poppins,sans-serif"},svg)
     .textContent="logPe (cm/s)";
