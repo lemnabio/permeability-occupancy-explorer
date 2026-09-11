@@ -87,16 +87,26 @@ input[type=range]:focus-visible{outline:2px solid var(--indigo);outline-offset:4
 @media(max-width:860px){.two{grid-template-columns:1fr}}
 .two .panel{margin-top:0}
 
-/* ---------- goal quick-pick ---------- */
-.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:3px}
-.panel-head h3{margin:0}
-.goalpick{display:flex;align-items:center;gap:6px}
-.goalpick .gp-label{font-size:11.5px;color:var(--ink-35)}
-.goalpick button{font-family:var(--sans);font-size:12px;font-weight:400;color:var(--ink-60);
-  background:transparent;border:1px solid var(--rule);border-radius:999px;padding:4px 10px;cursor:pointer}
-.goalpick button:hover{border-color:var(--indigo);color:var(--indigo)}
-.goalpick button.active{background:var(--indigo);border-color:var(--indigo);color:#fff;font-weight:500}
-.goalpick button:focus-visible{outline:2px solid var(--indigo);outline-offset:2px}
+/* ---------- advanced (below the fold) ---------- */
+.advanced{margin-top:6px}
+.advanced summary{color:var(--indigo)}
+.advanced .advbody{margin-top:16px}
+.advanced .advbody .hint{font-size:11.5px;color:var(--ink-35);margin:0 0 14px}
+
+/* ---------- goal quick-pick (in the hero, dark ground) ---------- */
+.hero-verdict{flex:1 1 320px;min-width:0}
+.hero-ctl{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.goalpick{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.goalpick .gp-label{font-size:11px;color:rgba(255,255,255,.5)}
+.goalpick button{font-family:var(--sans);font-size:12px;font-weight:400;color:rgba(255,255,255,.8);
+  background:transparent;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:4px 10px;cursor:pointer}
+.goalpick button:hover{border-color:var(--teal);color:#fff}
+.goalpick button.active{background:var(--teal);border-color:var(--teal);color:var(--navy);font-weight:500}
+.goalpick button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+/* ---------- 'assumes no efflux' caveat ---------- */
+.assume{display:inline-block;font-size:11.5px;color:var(--yellow);background:rgba(251,201,66,.14);
+  border-radius:999px;padding:3px 11px;margin:10px 0 0}
 
 /* ---------- limiting bars ---------- */
 .lev{display:grid;grid-template-columns:132px 1fr 58px;align-items:center;gap:12px;margin-bottom:7px;font-size:12.5px}
@@ -139,50 +149,45 @@ details .body code{background:rgba(83,100,241,.09);color:var(--indigo);padding:1
   <!-- ================= CONTROLS ================= -->
   <div>
     <div class="grp">
-      <h2>The molecule</h2>
-      <p class="hint">What you designed and measured.</p>
+      <h2>The essentials</h2>
+      <p class="hint">Two you measure, two you control — plus the one that most changes the timing.</p>
       <div class="ctl"><div class="row"><label for="s_logPe">Permeability, logPe</label><span class="val" id="v_logPe"></span></div><input type="range" id="s_logPe" min="-9" max="-4" step="0.05"></div>
       <div class="ctl"><div class="row"><label for="s_kd">Binding affinity, K<sub>D</sub></label><span class="val" id="v_kd"></span></div><input type="range" id="s_kd" min="0" max="1000"></div>
-      <div class="ctl"><div class="row"><label for="s_thalf">Stability in medium, t½</label><span class="val" id="v_thalf"></span></div><input type="range" id="s_thalf" min="0" max="1000"></div>
-    </div>
-
-    <div class="grp">
-      <h2>The experiment</h2>
-      <p class="hint">What you set up in the well.</p>
       <div class="ctl"><div class="row"><label for="s_dose">Dose in medium</label><span class="val" id="v_dose"></span></div><input type="range" id="s_dose" min="0" max="1000"></div>
       <div class="ctl"><div class="row"><label for="s_inc">Incubation</label><span class="val" id="v_inc"></span></div><input type="range" id="s_inc" min="0" max="1000"></div>
-      <div class="ctl"><div class="row"><label for="s_va">Cell volume / surface</label><span class="val" id="v_va"></span></div><input type="range" id="s_va" min="0.5" max="5" step="0.1"></div>
-      <div class="pair">
-        <div><div class="row"><label for="n_cells">Cells per well</label></div><input class="num" type="number" id="n_cells" min="100" step="1000"></div>
-        <div><div class="row"><label for="n_vol">Medium, µL</label></div><input class="num" type="number" id="n_vol" min="10" step="10"></div>
-      </div>
-    </div>
-
-    <div class="grp">
-      <h2>What you lose on the way</h2>
-      <p class="hint">These act on concentration, not on speed.</p>
-      <div class="ctl"><div class="row"><label for="s_fu">Free fraction in medium</label><span class="val" id="v_fu"></span></div><input type="range" id="s_fu" min="0" max="1000"></div>
-      <div class="ctl"><div class="row"><label for="s_er">Efflux ratio</label><span class="val" id="v_er"></span></div><input type="range" id="s_er" min="0" max="1000"></div>
-      <div class="ctl"><div class="row"><label for="s_fuc">Free fraction in cytosol</label><span class="val" id="v_fuc"></span></div><input type="range" id="s_fuc" min="0" max="1000"></div>
-    </div>
-
-    <div class="grp">
-      <h2>The target</h2>
-      <p class="hint">Abundance buffers the approach to steady state.</p>
       <div class="ctl"><div class="row"><label for="s_tgt">Target concentration</label><span class="val" id="v_tgt"></span></div><input type="range" id="s_tgt" min="0" max="1000"></div>
-      <div class="ctl"><div class="row"><label for="s_goal">Occupancy you want</label><span class="val" id="v_goal"></span></div><input type="range" id="s_goal" min="5" max="99" step="1"></div>
     </div>
+
+    <details class="advanced">
+      <summary>Advanced — losses, cell system and plate setup</summary>
+      <div class="advbody">
+        <p class="hint">Losses act on concentration, not on speed. Efflux is the exception — it lowers the ceiling.</p>
+        <div class="ctl"><div class="row"><label for="s_fu">Free fraction in medium</label><span class="val" id="v_fu"></span></div><input type="range" id="s_fu" min="0" max="1000"></div>
+        <div class="ctl"><div class="row"><label for="s_er">Efflux ratio</label><span class="val" id="v_er"></span></div><input type="range" id="s_er" min="0" max="1000"></div>
+        <div class="ctl"><div class="row"><label for="s_fuc">Free fraction in cytosol</label><span class="val" id="v_fuc"></span></div><input type="range" id="s_fuc" min="0" max="1000"></div>
+        <div class="ctl"><div class="row"><label for="s_va">Cell volume / surface</label><span class="val" id="v_va"></span></div><input type="range" id="s_va" min="0.5" max="5" step="0.1"></div>
+        <div class="ctl"><div class="row"><label for="s_thalf">Stability in medium, t½</label><span class="val" id="v_thalf"></span></div><input type="range" id="s_thalf" min="0" max="1000"></div>
+        <div class="pair">
+          <div><div class="row"><label for="n_cells">Cells per well</label></div><input class="num" type="number" id="n_cells" min="100" step="1000"></div>
+          <div><div class="row"><label for="n_vol">Medium, µL</label></div><input class="num" type="number" id="n_vol" min="10" step="10"></div>
+        </div>
+      </div>
+    </details>
   </div>
 
   <!-- ================= OUTPUT ================= -->
   <div>
     <div class="hero">
       <div class="hero-top">
-        <div>
+        <div class="hero-verdict">
           <p class="verdict" id="verdict"></p>
+          <p class="assume" id="assumeFlag" hidden>assumes no efflux</p>
           <p class="verdict-sub" id="verdictSub"></p>
         </div>
-        <button class="runbtn" id="run">Run the incubation</button>
+        <div class="hero-ctl">
+          <div class="goalpick" id="goalpick"><span class="gp-label">Target occupancy</span></div>
+          <button class="runbtn" id="run">Run the incubation</button>
+        </div>
       </div>
       <svg id="cellsvg" viewBox="0 0 700 218" style="width:100%;height:auto;margin-top:14px" role="img" aria-label="Cross-section showing medium, membrane and cytosol"></svg>
       <div class="readouts">
@@ -193,10 +198,7 @@ details .body code{background:rgba(83,100,241,.09);color:var(--indigo);padding:1
     </div>
 
     <div class="panel">
-      <div class="panel-head">
-        <h3>Occupancy over time</h3>
-        <div class="goalpick" id="goalpick"><span class="gp-label">Goal occupancy</span></div>
-      </div>
+      <h3>Occupancy over time</h3>
       <p class="hint">Log time axis. The dashed line is your goal, the shaded band is everything past the end of your incubation.</p>
       <svg id="chart1" viewBox="0 0 720 260" style="width:100%;height:auto" role="img" aria-label="Target occupancy against time"></svg>
     </div>
@@ -637,6 +639,11 @@ function drawVerdict(p){
   }
   $("verdict").innerHTML=`<span class="mark" style="background:${color}"></span>${head}`;
 
+  // efflux is in the advanced panel, but it is the only input that lowers the
+  // ceiling rather than delaying arrival. Surface the assumption when it is off,
+  // so the picture is not silently optimistic for anyone who never opens the panel.
+  $("assumeFlag").hidden = p.er>=1.05;
+
   // biology footnote
   const o=Math.max(ss.occ*100,0);
   let bio;
@@ -665,7 +672,7 @@ function readControls(){
   S.er=M.er.toVal(+$("s_er").value);
   S.fuc=M.fuc.toVal(+$("s_fuc").value);
   S.tgt=M.tgt.toVal(+$("s_tgt").value);
-  S.goal=+$("s_goal").value;
+  // goal is not a slider — it is driven by the quick-pick next to the verdict
   S.cells=Math.max(100,+$("n_cells").value||20000);
   S.vol=Math.max(10,+$("n_vol").value||100);
 }
@@ -680,7 +687,6 @@ function writeControls(){
   $("s_er").value=M.er.toSlider(S.er);
   $("s_fuc").value=M.fuc.toSlider(S.fuc);
   $("s_tgt").value=M.tgt.toSlider(S.tgt);
-  $("s_goal").value=S.goal;
   $("n_cells").value=Math.round(S.cells);
   $("n_vol").value=Math.round(S.vol);
 }
@@ -697,7 +703,6 @@ function labels(){
   $("v_er").textContent=S.er<1.05?"1 (none)":S.er.toFixed(S.er<10?1:0)+"×";
   $("v_fuc").textContent=S.fuc>=0.999?"1.0":S.fuc.toFixed(2);
   $("v_tgt").textContent=concStr(S.tgt);
-  $("v_goal").textContent=S.goal+"%";
 }
 
 function update(){
