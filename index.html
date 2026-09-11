@@ -108,6 +108,38 @@ input[type=range]:focus-visible{outline:2px solid var(--indigo);outline-offset:4
 .assume{display:inline-block;font-size:11.5px;color:var(--yellow);background:rgba(251,201,66,.14);
   border-radius:999px;padding:3px 11px;margin:10px 0 0}
 
+/* ---------- info icons + popover ---------- */
+.lblwrap{display:inline-flex;align-items:center;min-width:0}
+.info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;flex:none;
+  border-radius:50%;border:1px solid var(--rule);background:transparent;color:var(--ink-35);
+  font:600 10px/1 var(--sans);font-style:normal;cursor:pointer;padding:0;margin-left:5px;vertical-align:middle}
+.info:hover{border-color:var(--indigo);color:var(--indigo)}
+.info:focus-visible{outline:2px solid var(--indigo);outline-offset:2px}
+/* light variant for the dark hero ground */
+.hero .info{border-color:rgba(255,255,255,.32);color:rgba(255,255,255,.62)}
+.hero .info:hover{border-color:var(--teal);color:#fff}
+.xcap{display:flex;align-items:center;gap:2px;margin:14px 0 -4px;font-size:11px;color:rgba(255,255,255,.5)}
+
+.infopop{position:absolute;z-index:200;max-width:min(330px,calc(100vw - 24px));width:max-content;
+  background:#fff;color:var(--ink);border:1px solid var(--rule);border-radius:10px;
+  box-shadow:0 12px 38px rgba(13,20,62,.20);padding:15px 17px;font-size:12.5px;line-height:1.5}
+.infopop h4{margin:0 30px 8px 0;font-size:13px;font-weight:600}
+.infopop p{margin:0 0 9px}
+.infopop p:last-child,.infopop table:last-child,.infopop pre:last-child{margin-bottom:0}
+.infopop strong{font-weight:600}
+.infopop em{font-style:italic}
+.infopop code,.infopop pre{font-family:ui-monospace,monospace;font-size:11.5px;
+  background:rgba(83,100,241,.09);color:var(--indigo);border-radius:3px}
+.infopop code{padding:1px 5px}
+.infopop pre{padding:9px 11px;margin:0 0 10px;white-space:pre-wrap;overflow-x:auto}
+.infopop table{border-collapse:collapse;width:100%;margin:0 0 10px;font-size:11.5px}
+.infopop th,.infopop td{text-align:left;padding:3px 10px 3px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+.infopop th{font-weight:600;color:var(--ink-60)}
+.infopop tr:last-child td{border-bottom:none}
+.infopop .close{position:absolute;top:7px;right:9px;border:none;background:none;color:var(--ink-35);
+  cursor:pointer;font-size:17px;line-height:1;padding:2px 4px}
+.infopop .close:hover{color:var(--ink)}
+
 /* ---------- limiting bars ---------- */
 .lev{display:grid;grid-template-columns:132px 1fr 58px;align-items:center;gap:12px;margin-bottom:7px;font-size:12.5px}
 .lev .name{color:var(--ink-60)}
@@ -185,36 +217,37 @@ details .body code{background:rgba(83,100,241,.09);color:var(--indigo);padding:1
           <p class="verdict-sub" id="verdictSub"></p>
         </div>
         <div class="hero-ctl">
-          <div class="goalpick" id="goalpick"><span class="gp-label">Target occupancy</span></div>
+          <div class="goalpick" id="goalpick"><span class="gp-label">Target occupancy <button class="info" data-info="goal" type="button" aria-label="How much occupancy is enough">i</button></span></div>
           <button class="runbtn" id="run">Run the incubation</button>
         </div>
       </div>
-      <svg id="cellsvg" viewBox="0 0 700 218" style="width:100%;height:auto;margin-top:14px" role="img" aria-label="Cross-section showing medium, membrane and cytosol"></svg>
+      <div class="xcap">Cross-section <button class="info" data-info="cross_section" type="button" aria-label="Reading the cross-section">i</button></div>
+      <svg id="cellsvg" viewBox="0 0 700 218" style="width:100%;height:auto;margin-top:6px" role="img" aria-label="Cross-section showing medium, membrane and cytosol"></svg>
       <div class="readouts">
-        <div class="ro"><p class="k">Free in cytosol at steady state</p><p class="v" id="ro1"></p></div>
-        <div class="ro"><p class="k">Occupancy at steady state</p><p class="v" id="ro2"></p></div>
-        <div class="ro"><p class="k" id="ro3k">Time to reach your goal</p><p class="v" id="ro3"></p></div>
+        <div class="ro"><p class="k">Free in cytosol at steady state <button class="info" data-info="ss_free" type="button" aria-label="Free cytosolic concentration">i</button></p><p class="v" id="ro1"></p></div>
+        <div class="ro"><p class="k">Occupancy at steady state <button class="info" data-info="ss_occ" type="button" aria-label="The whole model in one line">i</button></p><p class="v" id="ro2"></p></div>
+        <div class="ro"><p class="k"><span id="ro3k">Time to reach your goal</span> <button class="info" data-info="time_to_goal" type="button" aria-label="Time to goal">i</button></p><p class="v" id="ro3"></p></div>
       </div>
     </div>
 
     <div class="panel">
-      <h3>Occupancy over time</h3>
+      <h3>Occupancy over time <button class="info" data-info="chart_time" type="button" aria-label="Reading the time course">i</button></h3>
       <p class="hint">Log time axis. The dashed line is your goal, the shaded band is everything past the end of your incubation.</p>
       <svg id="chart1" viewBox="0 0 720 260" style="width:100%;height:auto" role="img" aria-label="Target occupancy against time"></svg>
     </div>
 
     <div class="two">
       <div class="panel">
-        <h3>How permeable does it need to be?</h3>
+        <h3>How permeable does it need to be? <button class="info" data-info="chart_logpe" type="button" aria-label="Where the permeability bar actually sits">i</button></h3>
         <p class="hint">Time to reach your goal, swept across logPe. Everything else held where you set it.</p>
         <svg id="chart2" viewBox="0 0 360 240" style="width:100%;height:auto" role="img" aria-label="Time to goal against permeability"></svg>
         <p style="font-size:13px;margin:12px 0 0" id="minlogpe"></p>
       </div>
       <div class="panel">
-        <h3>What is actually holding you back</h3>
+        <h3>What is actually holding you back <button class="info" data-info="levers" type="button" aria-label="How the levers are ranked">i</button></h3>
         <p class="hint">Occupancy gained at the end of the incubation if you improved one thing and left the rest alone.</p>
         <div id="levers"></div>
-        <p style="font-size:12.5px;color:var(--ink-60);margin:14px 0 0" id="massbal"></p>
+        <p style="font-size:12.5px;color:var(--ink-60);margin:14px 0 0"><span id="massbal"></span> <button class="info" data-info="reservoir_check" type="button" aria-label="Reservoir check">i</button></p>
       </div>
     </div>
 
@@ -637,7 +670,7 @@ function drawVerdict(p){
     head=`Gets there eventually, but not in this window. You are at ${(occInc*100).toFixed(0)}% when you read out.`;
     sub=`Reaching ${p.goal}% needs ${fmtTime(s.tGoal)}. Extend the incubation or improve permeability.`;
   }
-  $("verdict").innerHTML=`<span class="mark" style="background:${color}"></span>${head}`;
+  $("verdict").innerHTML=`<span class="mark" style="background:${color}"></span>${head} <button class="info" data-info="verdict" type="button" aria-label="How to read the verdict">i</button>`;
 
   // efflux is in the advanced panel, but it is the only input that lowers the
   // ceiling rather than delaying arrival. Surface the assumption when it is off,
@@ -777,6 +810,179 @@ goalBtns=[50,60,80,90].map(g=>{
   $("goalpick").appendChild(b);
   return b;
 });
+
+/* ================= INFO POPOVERS =================
+   Mental-model notes for each control, readout and panel. State the mechanism,
+   then the number, then the consequence. One transferable idea per block. */
+const INFO={
+  perm:{title:"What permeability actually controls",body:`
+    <p>Pe is the passive membrane permeability in cm/s; the slider is its log<sub>10</sub>. It sets how fast the cytosol equilibrates with the medium, <strong>not</strong> how much drug ends up inside. The time constant is &tau; = (V/A)/Pe, so at logPe &minus;7 a cell is half-loaded in about half an hour and essentially done in two.</p>
+    <p>The familiar &minus;6.25 threshold is an oral-bioavailability bar, set by how long a drug spends in the gut. In a dish you can simply wait, so it is the wrong filter here.</p>
+    <p>PAMPA measures this number. PAMPA contains no transporters, so it cannot see efflux.</p>`},
+  affinity:{title:"Turning Kᴅ into an occupancy requirement",body:`
+    <p>K<sub>D</sub> is the free drug concentration at which half the target is bound. Occupancy follows directly: occ = C / (C + K<sub>D</sub>), where C is <strong>free</strong> cytosolic drug.</p>
+    <table><tr><th>You want</th><th>You need</th></tr>
+    <tr><td>50%</td><td>1 &times; K<sub>D</sub></td></tr><tr><td>80%</td><td>4 &times; K<sub>D</sub></td></tr>
+    <tr><td>90%</td><td>9 &times; K<sub>D</sub></td></tr><tr><td>95%</td><td>19 &times; K<sub>D</sub></td></tr></table>
+    <p>Shorthand: 3&ndash;5 &times; K<sub>D</sub> gives roughly 80% occupancy. The last few percent are expensive &mdash; 90% to 99% costs an elevenfold increase in concentration.</p>`},
+  stability:{title:"Which compartment's stability matters",body:`
+    <p>First-order decay of the compound in the medium at 37&nbsp;&deg;C.</p>
+    <p>The medium is the reservoir that keeps resupplying the cytosol, so medium stability usually binds before intracellular stability does. Intracellular half-life only matters when it is shorter than the equilibration time.</p>
+    <p>Head-to-tail cyclisation removes exopeptidase liability entirely, which is why cyclic peptides survive hours to days in serum where linear ones last minutes. It does nothing against endopeptidases; N-methylation and D-residues do.</p>
+    <p>Set this short and watch: the molecule hits its goal, then loses it before the biology has run.</p>`},
+  dose:{title:"Dose",body:`
+    <p>Total concentration added to the well, before any serum binding.</p>
+    <p>One of only four quantities that set the final occupancy. Doubling it is often a cleaner fix than a chemistry campaign, and the first thing to try when the verdict says you are concentration-capped.</p>
+    <p>Limits are solubility, non-specific toxicity, and off-target engagement. Above roughly 30&nbsp;&micro;M a cyclic peptide is usually telling you more about aggregation than about biology.</p>`},
+  incubation:{title:"Incubation",body:`
+    <p>Time from dosing to readout.</p>
+    <p>It has to exceed the equilibration time, which is what the time-course chart shows. Beyond that, extra time buys nothing: the curve is flat once you are at steady state.</p>
+    <p>This is not the whole experiment. Most readouts need the biology to run <em>after</em> engagement, which is a separate clock.</p>`},
+  cellsize:{title:"Why cell geometry appears at all",body:`
+    <p>The ratio of cell volume to membrane area, in &micro;m. It is the only cell property that enters the transport calculation, through &tau; = (V/A)/Pe.</p>
+    <p>Mammalian cells sit between 1 and 2.5&nbsp;&micro;m. A small lymphocyte loads faster than a large adherent cell with the same compound, purely because it has more membrane per unit of volume to fill.</p>
+    <p>Leave it at 2 unless you know your line is unusual.</p>`},
+  reservoir:{title:"Is the well big enough?",body:`
+    <p>These two only feed the reservoir check underneath the levers panel.</p>
+    <p>The question they answer: do the target sites in all your cells add up to a meaningful share of the compound in the well? Usually not. Twenty thousand cells at 2&nbsp;pL each is 40&nbsp;nL of intracellular volume against 100&nbsp;&micro;L of medium, or 0.04%, so the medium behaves as an infinite source and target abundance cannot cap occupancy.</p>
+    <p>It only starts to matter with a very abundant target, a low dose, and a dense well.</p>`},
+  serum:{title:"What FBS does to a peptide",body:`
+    <p>Neat FBS contains 16 to 19&nbsp;g/L albumin, so 10% FBS gives about 25&nbsp;&micro;M. The cytosol equilibrates with <strong>free</strong> medium concentration, not total, so protein binding lowers the endpoint directly.</p>
+    <table><tr><th>Albumin K<sub>D</sub></th><th>Free fraction in 10% FBS</th></tr>
+    <tr><td>1&nbsp;&micro;M</td><td>0.04</td></tr><tr><td>10&nbsp;&micro;M</td><td>0.29</td></tr><tr><td>100&nbsp;&micro;M</td><td>0.80</td></tr></table>
+    <p>Not modelled here: serum peptidases attack bonds that cyclisation does not protect; serum <em>reduces</em> adsorption to plastic, which helps at low &micro;M; lipoproteins are an extra sink for lipophilic compounds.</p>
+    <p>Glycine-rich, charged peptides are usually weak albumin binders, so the free fraction is probably 0.5 or better. Lipophilic macrocycles are the ones that suffer.</p>`},
+  efflux:{title:"The only loss that lowers the ceiling",body:`
+    <p>Efflux ratio is Papp(B&rarr;A) / Papp(A&rarr;B) from a bidirectional Caco-2 or MDCK-MDR1 assay. Above 2 means efflux is happening; above 3 is usually called a P-gp substrate.</p>
+    <table><tr><td>ent-verticilide (macrocyclic depsipeptide)</td><td>1.6</td></tr>
+    <tr><td>Cyclosporin A</td><td>~3</td></tr><tr><td>Digoxin, reference substrate</td><td>7.7</td></tr>
+    <tr><td>Charge-masked cyclic RGD prodrug</td><td>~20</td></tr></table>
+    <p>Efflux is different in kind from every other loss. It makes the steady-state cytosol <em>lower</em> than the medium, rather than just slower to get there. It also speeds equilibration, because it adds to the total rate of leaving.</p>
+    <p>Two traps. Good PAMPA permeability does not predict a low ER &mdash; a survey of 47 semipeptidic macrocycles found high passive permeability throughout, yet cellular permeability governed by efflux. And ER is cell-line specific: Caco-2 and MDCK-MDR1 overexpress P-gp on purpose, while HEK293 and most HeLa lines express little. Measure it in the line you will actually use.</p>`},
+  fucell:{title:"Free versus total inside the cell",body:`
+    <p>The fraction of intracellular drug that is unbound and available to the target. The rest is partitioned into internal membranes or bound non-specifically to protein.</p>
+    <p>It slows loading, because every molecule sequestered has to be delivered across the membrane first. It does <strong>not</strong> change the final occupancy, because equilibrium is set by free concentration on each side.</p>
+    <p>This is also why an LC-MS measurement of a cell lysate can mislead. It gives total intracellular drug, which can be ten to a hundred times the free concentration the target actually sees.</p>`},
+  target:{title:"How abundant is your target really?",body:`
+    <p>Human cell proteomes span seven orders of magnitude, up to 20 million copies per cell. At a 2&nbsp;pL cell volume:</p>
+    <table><tr><th>Copies/cell</th><th>Conc.</th><th>Typical class</th></tr>
+    <tr><td>~4,000</td><td>3&nbsp;nM</td><td>transcription factors</td></tr>
+    <tr><td>10&#8308;&ndash;10&#8309;</td><td>8&ndash;80&nbsp;nM</td><td>signalling, kinases</td></tr>
+    <tr><td>~10&#8310;</td><td>0.8&nbsp;&micro;M</td><td>abundant scaffolds</td></tr>
+    <tr><td>2&times;10&#8311;</td><td>17&nbsp;&micro;M</td><td>cytoskeleton, glycolytic</td></tr></table>
+    <p>Median is contested (8,000 / 9,700 / 170,000 copies reported), so treat 10 to 100&nbsp;nM as the working range and assume tenfold uncertainty.</p>
+    <p>Abundance buffers the approach to steady state and leaves the endpoint untouched. Below about 500&nbsp;nM the effect is negligible; above a few &micro;M it dominates the timing. Look up your target before assuming.</p>`},
+  goal:{title:"How much occupancy is enough",body:`
+    <p>This is a question you are asking, not a property of the system.</p>
+    <table><tr><th>Situation</th><th>Target</th></tr>
+    <tr><td>Detectable engagement only</td><td>30%</td></tr>
+    <tr><td>Receptor antagonists, transporters</td><td>60&ndash;80%</td></tr>
+    <tr><td>PPI disruption, enzyme inhibition, no reserve</td><td>90%+</td></tr>
+    <tr><td>Catalytic: degraders, glues</td><td>often much lower</td></tr></table>
+    <p>Clinical anchors: D2 occupancy is kept between 65 and 80%, and doses reaching only 50% are not partially effective &mdash; they are simply ineffective. BTK needs above 90% for maximum efficacy.</p>
+    <p>PPIs and transcription factors sit at the demanding end: there is no receptor reserve, and you are competing against a partner that is already bound. With a partner at 1&nbsp;&micro;M binding at K<sub>D</sub> 100&nbsp;nM, you pay an elevenfold concentration penalty on top of the occupancy requirement.</p>`},
+  ss_free:{title:"Free cytosolic concentration",body:`
+    <p>Equals dose &times; free fraction in medium &divide; efflux ratio. That is the whole calculation.</p>
+    <p>Permeability does not appear. For a passively permeable molecule with no efflux, the cytosol ends up at the same free concentration as the medium, however slowly it gets there. This is the single most counterintuitive thing on the page, and the reason a logPe of &minus;8 is not fatal in a dish.</p>`},
+  ss_occ:{title:"The whole model in one line",body:`
+    <pre>occupancy = 1 / (1 + K&#7429;·ER / (dose·fu))</pre>
+    <p>Four inputs. Nothing else reaches the endpoint.</p>
+    <p>What is absent is the point: permeability, target abundance, incubation time, cell size and intracellular binding are all kinetics. They change how long you wait, never where you land.</p>
+    <p>Assumes the medium is an effectively infinite reservoir, no metabolism, no active uptake, and no membrane potential acting on a charged species.</p>`},
+  time_to_goal:{title:"Time to goal",body:`
+    <p>When occupancy first crosses the level you asked for, from the simulated time course.</p>
+    <p>It depends on permeability, on how far the goal sits below the ceiling, and on target abundance. A goal just under the ceiling takes far longer than one comfortably below it, because the driving force collapses as you approach equilibrium.</p>
+    <p>If this reads as a dash, the goal is above the steady-state ceiling and no incubation time will reach it.</p>`},
+  verdict:{title:"Reading the verdict",body:`
+    <p>Three states, and they call for different fixes.</p>
+    <p><strong>Green.</strong> The goal is reached inside the incubation. Nothing to do.</p>
+    <p><strong>Amber.</strong> The goal is reachable but not in this window &mdash; a timing problem. Extend the incubation, improve permeability, or accept the lower occupancy you actually have at readout.</p>
+    <p><strong>Red.</strong> The goal is above the ceiling &mdash; a concentration problem, and waiting cannot fix it. Raise the dose, tighten affinity, remove serum, or block efflux.</p>
+    <p>Telling these apart is most of the value here. Teams routinely extend incubations against a red verdict, which cannot work.</p>`},
+  cross_section:{title:"Reading the cross-section",body:`
+    <p>Left is the medium, scaled to your dose. The solid block is the free fraction, the faint block behind it is the protein-bound remainder.</p>
+    <p>Right is the cytosol at the current timepoint, on the same scale. The dashed line is the ceiling it is heading for; if that line sits below the medium block, efflux is the reason.</p>
+    <p>The arrow is net flux, and it thins to nothing as the two sides approach equilibrium.</p>`},
+  chart_time:{title:"Reading the time course",body:`
+    <p>Log time axis, because these processes span minutes to days. Dashed line is your goal, shading is everything past your readout.</p>
+    <p>The S-shape comes from occupancy, not from transport. Free concentration rises as a simple exponential; occupancy lags at first because early concentrations are far below K<sub>D</sub>, then accelerates once it approaches it.</p>
+    <p>A curve that flattens well below the goal line is a concentration ceiling, not slow loading.</p>`},
+  chart_logpe:{title:"Where the permeability bar actually sits",body:`
+    <p>The same calculation swept across logPe with everything else held fixed. The shaded band is the region that fits your incubation.</p>
+    <p>Read the crossing point as your real specification. Anything more permeable is wasted effort for this experiment &mdash; usually a lower bar than people assume, and often below the &minus;6.25 they were aiming at.</p>
+    <p>If the curve never enters the band, permeability is not your problem.</p>`},
+  levers:{title:"How the levers are ranked",body:`
+    <p>Each bar is the occupancy you would gain at the end of the incubation by improving one thing and leaving the rest alone. Computed by re-running the full simulation with that single change.</p>
+    <p>They are not additive, and the ranking usually shifts once you fix the top one. Treat it as "what to do next", not as a budget.</p>
+    <p>A row showing a dash means that lever does nothing in your current regime, which is often the most useful thing on the panel.</p>`},
+  reservoir_check:{title:"Reservoir check",body:`
+    <p>Compares the total target sites across all cells in the well against the total compound in the well.</p>
+    <p>Below about 15% the medium is effectively infinite, and target abundance affects timing only. Above it you start depleting the well, occupancy really is capped by mass balance, and the fix is more dose or more volume rather than a better molecule.</p>`},
+  /* anchors not yet built — content kept for when the features land */
+  mechanism_time:{title:"Engagement is not the endpoint",body:`
+    <p>Occupancy has to be <em>held</em> while the biology runs, and that clock starts after engagement.</p>
+    <table><tr><th>Readout</th><th>Time needed</th></tr>
+    <tr><td>PELSA, CETSA, NanoBRET</td><td>none, occupancy is the readout</td></tr>
+    <tr><td>Phospho signalling</td><td>5&ndash;30 min</td></tr>
+    <tr><td>Targeted degradation, Dmax</td><td>4&ndash;8 h</td></tr>
+    <tr><td>Transcriptional response</td><td>6&ndash;24 h</td></tr>
+    <tr><td>Downstream protein depletion</td><td>that protein's half-life, often 20&ndash;40 h</td></tr>
+    <tr><td>Proliferation, viability</td><td>72&ndash;96 h, with re-dosing</td></tr></table>
+    <p>This is where stability stops being cosmetic. A peptide that reaches 80% at thirty minutes and is degraded by hour four gives a clean engagement result and a null phenotype, and the two are not in conflict.</p>`},
+  competition:{title:"You are not binding an empty target",body:`
+    <p>A PPI target already has its partner bound. To displace it you need free drug above K<sub>D</sub> &times; (1 + [partner]/K<sub>D,partner</sub>), on top of the occupancy requirement.</p>
+    <p>A partner present at 1&nbsp;&micro;M binding at K<sub>D</sub> 100&nbsp;nM costs you elevenfold. This term is usually larger than the permeability penalty people spend their time worrying about, and it is the most common reason a compound with good biochemical potency does nothing in cells.</p>`}
+};
+
+/* one shared popover, positioned under (or above) the clicked icon and clamped
+   to the viewport; event-delegated so dynamically-rendered icons work too. */
+(function(){
+  const pop=document.createElement("div");
+  pop.className="infopop";pop.setAttribute("role","dialog");pop.hidden=true;
+  pop.innerHTML=`<button class="close" type="button" aria-label="Close">×</button><h4 id="infopop-title"></h4><div class="infopop-body"></div>`;
+  document.body.appendChild(pop);
+  const titleEl=pop.querySelector("#infopop-title"),bodyEl=pop.querySelector(".infopop-body");
+  pop.setAttribute("aria-labelledby","infopop-title");
+  let anchor=null;
+  function place(){
+    if(!anchor)return;
+    const r=anchor.getBoundingClientRect(),pr=pop.getBoundingClientRect(),sx=scrollX,sy=scrollY;
+    let left=Math.min(sx+r.left,sx+innerWidth-pr.width-12);left=Math.max(sx+8,left);
+    let top=sy+r.bottom+8;
+    if(r.bottom+pr.height+16>innerHeight&&r.top-pr.height-8>sy) top=sy+r.top-pr.height-8;
+    pop.style.left=left+"px";pop.style.top=top+"px";
+  }
+  function open(id,el){
+    const d=INFO[id];if(!d)return;
+    titleEl.textContent=d.title;bodyEl.innerHTML=d.body;
+    anchor=el;pop.hidden=false;place();
+  }
+  function close(){pop.hidden=true;anchor=null;}
+  pop.querySelector(".close").addEventListener("click",close);
+  document.addEventListener("click",e=>{
+    const btn=e.target.closest(".info");
+    if(btn){e.preventDefault();e.stopPropagation();
+      if(!pop.hidden&&anchor===btn){close();return;}
+      open(btn.dataset.info,btn);return;}
+    if(!pop.hidden&&!e.target.closest(".infopop"))close();
+  });
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!pop.hidden)close();});
+  addEventListener("resize",()=>{if(!pop.hidden)place();});
+  addEventListener("scroll",()=>{if(!pop.hidden)place();},true);
+
+  // attach an icon after each labelled control
+  [["s_logPe","perm"],["s_kd","affinity"],["s_dose","dose"],["s_inc","incubation"],
+   ["s_tgt","target"],["s_fu","serum"],["s_er","efflux"],["s_fuc","fucell"],
+   ["s_va","cellsize"],["s_thalf","stability"],["n_cells","reservoir"]].forEach(([forId,id])=>{
+    const lbl=document.querySelector(`label[for="${forId}"]`);if(!lbl)return;
+    const wrap=document.createElement("span");wrap.className="lblwrap";
+    lbl.parentNode.insertBefore(wrap,lbl);wrap.appendChild(lbl);
+    const b=document.createElement("button");
+    b.className="info";b.type="button";b.dataset.info=id;b.textContent="i";
+    b.setAttribute("aria-label",INFO[id].title);
+    wrap.appendChild(b);
+  });
+})();
 
 document.querySelectorAll("input").forEach(i=>i.addEventListener("input",update));
 $("run").addEventListener("click",runAnim);
