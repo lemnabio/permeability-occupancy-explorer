@@ -59,16 +59,19 @@ Do not "improve" the physics without checking this table.
 
 ## Hosting
 
-Not wired yet (deliberate).
+**GitHub Pages, deploy on push.** `.github/workflows/deploy.yml` publishes the
+repo to Pages on every push to `main`. To turn it on once: repo **Settings →
+Pages → Build and deployment → Source: GitHub Actions**.
 
-**GitHub Pages will not keep this private.** On Free/Pro/Team plans a Pages site
-is world-readable by anyone with the URL even when the repo is private; access-
-controlled Pages needs GitHub Enterprise Cloud. This is internal-only, so do not
-use Pages.
+**A Pages site is PUBLIC.** On Free/Pro/Team plans anyone with the URL can open it
+and view-source the whole file; there is no access gate (that needs Enterprise).
+This is an accepted, deliberate choice: the build carries no proprietary data —
+presets are the default spec, literature values (flagged as estimates), and
+labelled archetypes. Do **not** enable Pages for any build that contains
+confidential values.
 
-Host behind an auth gate — e.g. Cloudflare Pages + Cloudflare Access (free for a
-small team, deploy-on-push, custom subdomain under lemna.bio). Domain is an open
-decision for Moustafa.
+Custom domain under lemna.bio is optional (Settings → Pages → Custom domain, plus
+a DNS CNAME). Subdomain is still an open decision.
 
 ## State of the spec
 

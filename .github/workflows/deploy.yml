@@ -1,0 +1,36 @@
+name: Deploy to GitHub Pages
+
+# Deploy-on-push. NOTE: a GitHub Pages site is PUBLIC on Free/Pro/Team plans —
+# anyone with the URL can view it and view-source the whole file. This tool
+# carries no proprietary data (see the presets), so that is acceptable, but it
+# is a deliberate choice: do not enable Pages for a build that contains
+# confidential values.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
