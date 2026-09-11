@@ -16,6 +16,7 @@
   --sans:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;padding:0}
 body{
   background:var(--paper); color:var(--ink); font-family:var(--sans);
@@ -37,6 +38,9 @@ body{
 .presets button.sharebtn{border-color:var(--indigo);color:var(--indigo);font-weight:500}
 .presets button.sharebtn:hover{background:var(--indigo);color:#fff}
 .presets button.sharebtn.ok{border-color:var(--teal);color:var(--navy);background:var(--pale)}
+/* archetypes: dashed, italic, so nobody quotes them as measured compounds */
+.presets button.arch{border-style:dashed;font-style:italic;color:var(--ink-60)}
+.presets button.arch:hover{border-color:var(--ink-60);color:var(--ink)}
 
 /* ---------- shell ---------- */
 .shell{display:grid;grid-template-columns:322px 1fr;gap:34px;align-items:start}
@@ -107,6 +111,14 @@ input[type=range]:focus-visible{outline:2px solid var(--indigo);outline-offset:4
 /* ---------- 'assumes no efflux' caveat ---------- */
 .assume{display:inline-block;font-size:11.5px;color:var(--yellow);background:rgba(251,201,66,.14);
   border-radius:999px;padding:3px 11px;margin:10px 0 0}
+
+/* ---------- steady-state ceiling, beside the goal control ---------- */
+.ceilRO{margin:0;font-size:12px;color:rgba(255,255,255,.62);text-align:right}
+.ceilRO strong{color:var(--teal);font-weight:500}
+
+/* ---------- endosomal-uptake caveat under the readouts ---------- */
+.endnote{margin:16px 0 0;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);
+  font-size:11.5px;color:rgba(255,255,255,.5);max-width:76ch}
 
 /* ---------- info icons + popover ---------- */
 .lblwrap{display:inline-flex;align-items:center;min-width:0}
@@ -203,6 +215,13 @@ details .body code{background:rgba(83,100,241,.09);color:var(--indigo);padding:1
           <div><div class="row"><label for="n_cells">Cells per well</label></div><input class="num" type="number" id="n_cells" min="100" step="1000"></div>
           <div><div class="row"><label for="n_vol">Medium, µL</label></div><input class="num" type="number" id="n_vol" min="10" step="10"></div>
         </div>
+
+        <p class="hint" style="margin-top:18px">The biology after engagement. Occupancy has to be held while the readout develops.</p>
+        <div class="ctl"><div class="row"><label for="s_mech">Mechanism time after readout</label><span class="val" id="v_mech"></span></div><input type="range" id="s_mech" min="0" max="96" step="0.25"></div>
+
+        <p class="hint" style="margin-top:18px">A PPI target is not empty. A bound partner raises the free drug you need.</p>
+        <div class="ctl"><div class="row"><label for="s_pconc">Competing partner concentration</label><span class="val" id="v_pconc"></span></div><input type="range" id="s_pconc" min="0" max="50" step="0.05"></div>
+        <div class="ctl"><div class="row"><label for="s_pkd">Partner affinity, K<sub>D</sub></label><span class="val" id="v_pkd"></span></div><input type="range" id="s_pkd" min="0" max="1000"></div>
       </div>
     </details>
   </div>
@@ -218,6 +237,7 @@ details .body code{background:rgba(83,100,241,.09);color:var(--indigo);padding:1
         </div>
         <div class="hero-ctl">
           <div class="goalpick" id="goalpick"><span class="gp-label">Target occupancy <button class="info" data-info="goal" type="button" aria-label="How much occupancy is enough">i</button></span></div>
+          <p class="ceilRO" id="ceilRO">Ceiling —</p>
           <button class="runbtn" id="run">Run the incubation</button>
         </div>
       </div>
@@ -228,6 +248,7 @@ details .body code{background:rgba(83,100,241,.09);color:var(--indigo);padding:1
         <div class="ro"><p class="k">Occupancy at steady state <button class="info" data-info="ss_occ" type="button" aria-label="The whole model in one line">i</button></p><p class="v" id="ro2"></p></div>
         <div class="ro"><p class="k"><span id="ro3k">Time to reach your goal</span> <button class="info" data-info="time_to_goal" type="button" aria-label="Time to goal">i</button></p><p class="v" id="ro3"></p></div>
       </div>
+      <p class="endnote">Models free drug only. Endosomal uptake is not included — it can inflate a live-cell PELSA signal with compound that engages target only after lysis.</p>
     </div>
 
     <div class="panel">
@@ -290,12 +311,16 @@ const M={
   fu:logmap(0.001,1),         // fraction
   er:logmap(1,200),           // ratio
   fuc:logmap(0.01,1),         // fraction
-  tgt:logmap(0.005,100)       // uM
+  tgt:logmap(0.005,100),      // uM
+  pkd:logmap(0.05,10000)      // nM (competing partner KD)
 };
 
 /* ---------- state ---------- */
-const S={logPe:-7,kd:50,thalf:2000,dose:1,inc:6,va:2,cells:20000,vol:100,
-         fu:1,er:1,fuc:1,tgt:2,goal:60};
+/* defaults = the "Goal for first hit" preset (target 50 nM and goal 80% are
+   corrections: 2 µM was a top-percentile abundance, 60% too permissive) */
+const S={logPe:-7,kd:50,thalf:2000,dose:2,inc:8,va:2,cells:20000,vol:100,
+         fu:0.8,er:1.2,fuc:1,tgt:0.05,goal:80,
+         mech:0,pconc:0,pkd:100};
 
 /* ---------- shareable URL state ----------
    State lives in the hash (never the query string), so it is never sent to a
@@ -304,7 +329,8 @@ const S={logPe:-7,kd:50,thalf:2000,dose:1,inc:6,va:2,cells:20000,vol:100,
    bounds or move another control. */
 const RANGE={logPe:[-9,-4],kd:[0.05,10000],thalf:[0.1,2000],dose:[0.01,200],
   inc:[0.083,48],va:[0.5,5],fu:[0.001,1],er:[1,200],fuc:[0.01,1],tgt:[0.005,100],
-  goal:[5,99],cells:[100,1e9],vol:[10,1e6]};
+  goal:[5,99],cells:[100,1e9],vol:[10,1e6],
+  mech:[0,96],pconc:[0,50],pkd:[0.05,10000]};
 const URLKEYS=Object.keys(RANGE);
 const clampVal=(k,v)=>{const[lo,hi]=RANGE[k];return Math.min(hi,Math.max(lo,v));};
 
@@ -356,8 +382,25 @@ function freeFromTotal(L,tgt,kd,fuc){
   return 0.5*(lo+hi);
 }
 
+/* ---------- competitive shift of the apparent KD ----------
+   A partner already bound to the target raises the free-drug concentration
+   needed to reach a given occupancy: KD_eff = KD · (1 + [partner]/KD_partner).
+   Partner conc is in uM, its KD in nM; both converted to nM for the ratio.
+   With no partner this returns KD unchanged, so nothing else moves. */
+function effKD(p){
+  const pc=p.pconc||0, pk=p.pkd||0;
+  if(pc>0&&pk>0)return p.kd*(1+(pc*1000)/pk);
+  return p.kd;
+}
+
 /* ---------- simulate ---------- */
-/* returns {t:[], occ:[], free:[], tGoal, occAt(t)} ; concentrations in uM, time in s */
+/* returns {t:[], occ:[], free:[], tGoal, occAt(t)} ; concentrations in uM, time in s.
+   Integrator: over each step the equation is dL/dt = a − b·L, solved exactly as
+   L(t+dt) = L∞ + (L − L∞)·e^(−b·dt) with L∞ = a/b. a and b come from the local
+   linearisation (b uses the analytic slope dL_free/dL), so the step is stable at
+   any dt — unlike a forward-Euler step, which diverges once dt exceeds the time
+   constant above ~logPe −6. Do not swap this for Euler/RK; re-run the regression
+   table if you touch it. */
 function simulate(p,opts){
   opts=opts||{};
   const tMax=opts.tMax||172800;                 // 48 h
@@ -366,7 +409,7 @@ function simulate(p,opts){
   const r=p.va*1e-4;                            // cm
   const k=Pe/r;                                 // 1/s
   const kdeg=p.thalf>=1999?0:LN2/(p.thalf*3600);
-  const kdUM=p.kd/1000;
+  const kdUM=effKD(p)/1000;
   const cMed0=p.dose*p.fu;
 
   const tau=1/(k*p.er);
@@ -378,15 +421,35 @@ function simulate(p,opts){
   while(t<tMax&&steps<maxSteps){
     const cMed=cMed0*(kdeg?Math.exp(-kdeg*t):1);
     const lf=freeFromTotal(L,p.tgt,kdUM,p.fuc);
-    const dL=k*(cMed-p.er*lf)-kdeg*L;
-    L=Math.max(0,L+dL*dt);
+    const dLdt=k*(cMed-p.er*lf)-kdeg*L;
+    // analytic slope of free wrt total: L = lf/fuc + T·lf/(lf+KD)
+    const dlf_dL=1/(1/p.fuc + p.tgt*kdUM/((lf+kdUM)*(lf+kdUM)));
+    const b=k*p.er*dlf_dL + kdeg;               // relaxation rate of the local linear ODE
+    const Lprev=L;
+    let Linf=null;
+    if(b>1e-30){
+      Linf=(dLdt+b*L)/b;
+      L=Math.max(0,Linf+(L-Linf)*Math.exp(-b*dt));
+    }else{
+      L=Math.max(0,L+dLdt*dt);
+    }
     t+=dt;
     const lf2=freeFromTotal(L,p.tgt,kdUM,p.fuc);
     const occ=lf2/(lf2+kdUM);
     if(!isFinite(tGoal)&&occ>=goalFrac){
       const prevOcc=O[O.length-1];
-      const f=(goalFrac-prevOcc)/Math.max(occ-prevOcc,1e-12);
-      tGoal=T[T.length-1]+f*dt;
+      let frac;
+      // exact crossing time within the step: L(τ) = Linf + (Lprev−Linf)·e^(−bτ).
+      // Solve for the total L whose free level gives exactly the goal occupancy.
+      const lfT=kdUM*goalFrac/(1-goalFrac);
+      const Ltarget=lfT/p.fuc + p.tgt*lfT/(lfT+kdUM);
+      if(Linf!==null){
+        const ratio=(Ltarget-Linf)/(Lprev-Linf);
+        if(ratio>0&&ratio<1)frac=(-Math.log(ratio)/b)/dt;
+      }
+      if(frac===undefined)frac=(goalFrac-prevOcc)/Math.max(occ-prevOcc,1e-12);
+      frac=Math.min(1,Math.max(0,frac));
+      tGoal=T[T.length-1]+frac*dt;
       if(opts.fast)return{tGoal:tGoal};
     }
     T.push(t);O.push(occ);F.push(lf2);
@@ -398,7 +461,7 @@ function simulate(p,opts){
 }
 
 function steadyState(p){
-  const kdUM=p.kd/1000;
+  const kdUM=effKD(p)/1000;
   const lf=p.dose*p.fu/p.er;
   return{free:lf,occ:lf/(lf+kdUM)};
 }
@@ -530,6 +593,23 @@ function drawChart1(p){
     el("text",{x:lft?mx-9:mx+9,y:hi?yg+18:yg-9,fill:"#0D143E","font-size":"12","font-weight":"500","text-anchor":lft?"end":"start","font-family":"Poppins,sans-serif"},svg)
       .textContent=fmtTime(s.tGoal);
   }
+
+  // mechanism-time marker: occupancy has to be HELD while the biology runs, and
+  // that clock starts at readout. An unstable compound can pass at the readout
+  // and have decayed below the goal by the time the phenotype develops.
+  if(p.mech>0){
+    const mechEnd=(p.inc+p.mech)*3600, capped=mechEnd>172800;
+    const xm=X(Math.min(mechEnd,172800));
+    const occM=s.occAt(Math.min(mechEnd,172800));
+    const below=occM<p.goal/100-1e-6, col=below?"#E34539":"#50CBC3";
+    el("path",{d:`M${xm} ${T} L${xm} ${H-B}`,stroke:col,"stroke-width":1.3,"stroke-dasharray":"2 3"},svg);
+    el("circle",{cx:xm,cy:Y(occM),r:4,fill:col},svg);
+    const lft=xm>W-150;
+    el("text",{x:lft?xm-6:xm+6,y:T+13,fill:col,"font-size":"11","text-anchor":lft?"end":"start","font-family":"Poppins,sans-serif"},svg)
+      .textContent=capped?"+ mechanism (past 2 d)":"+ mechanism time";
+    if(below)el("text",{x:lft?xm-6:xm+6,y:T+27,fill:"#E34539","font-size":"11","font-weight":"500","text-anchor":lft?"end":"start","font-family":"Poppins,sans-serif"},svg)
+      .textContent="fallen to "+(occM*100).toFixed(0)+"%";
+  }
   CUR.chart1={X:X,Y:Y};
 }
 
@@ -647,13 +727,27 @@ function drawVerdict(p){
   $("ro1").innerHTML=c.n+"<small>"+c.u+"</small>";
   $("ro2").innerHTML=(ss.occ*100).toFixed(1)+"<small>%</small>";
 
+  const ceiling=ss.occ, goalFrac=p.goal/100;
+  const kdTxt=`${effKD(p).toFixed(effKD(p)<10?2:0)} nM${p.pconc>0?" effective" : ""}`;
+  // steady-state ceiling, always visible next to the goal control
+  $("ceilRO").innerHTML=`Ceiling <strong>${(ceiling*100).toFixed(0)}%</strong>`;
+
   let color,head,sub;
-  if(ss.occ*100<p.goal){
+  if(goalFrac>ceiling+1e-9){
     color="#E34539";
     $("ro3k").textContent="Goal is out of reach";
     $("ro3").innerHTML="—";
-    head=`Concentration caps you at ${(ss.occ*100).toFixed(0)}%. Time will not fix this.`;
-    sub=`Free cytosolic settles at ${concStr(ss.free)} against a KD of ${p.kd} nM. Raise the dose, tighten affinity, or remove a loss term.`;
+    head=`Concentration caps you at ${(ceiling*100).toFixed(0)}%. Time will not fix this.`;
+    sub=`Free cytosolic settles at ${concStr(ss.free)} against a Kᴅ of ${kdTxt}. Raise the dose, tighten affinity, or remove a loss term.`;
+  }else if(goalFrac>0.9*ceiling){
+    // approach to equilibrium is exponential: a goal this close to the ceiling
+    // takes many time constants and swings wildly with every other parameter,
+    // so a specific time here is precise but useless.
+    color="#FBC942";
+    $("ro3k").textContent="Time to reach your goal";
+    $("ro3").innerHTML=`<span style="font-size:15px;font-weight:400">too sensitive to quote</span>`;
+    head=`You are asking for close to the maximum this system can deliver (ceiling ${(ceiling*100).toFixed(0)}%).`;
+    sub="Approach to the ceiling is exponential, so the time to reach it is extremely sensitive to every other parameter — the number would be precise but useless. Aim a little lower, or raise the ceiling: more dose, tighter affinity, less serum, or block efflux.";
   }else if(isFinite(s.tGoal)&&s.tGoal<=p.inc*3600){
     color="#50CBC3";
     $("ro3k").textContent="Time to reach your goal";
@@ -708,6 +802,9 @@ function readControls(){
   // goal is not a slider — it is driven by the quick-pick next to the verdict
   S.cells=Math.max(100,+$("n_cells").value||20000);
   S.vol=Math.max(10,+$("n_vol").value||100);
+  S.mech=+$("s_mech").value;
+  S.pconc=+$("s_pconc").value;
+  S.pkd=M.pkd.toVal(+$("s_pkd").value);
 }
 function writeControls(){
   $("s_logPe").value=S.logPe;
@@ -722,6 +819,9 @@ function writeControls(){
   $("s_tgt").value=M.tgt.toSlider(S.tgt);
   $("n_cells").value=Math.round(S.cells);
   $("n_vol").value=Math.round(S.vol);
+  $("s_mech").value=S.mech;
+  $("s_pconc").value=S.pconc;
+  $("s_pkd").value=M.pkd.toSlider(S.pkd);
 }
 function labels(){
   const Pe=Math.pow(10,S.logPe);
@@ -736,6 +836,9 @@ function labels(){
   $("v_er").textContent=S.er<1.05?"1 (none)":S.er.toFixed(S.er<10?1:0)+"×";
   $("v_fuc").textContent=S.fuc>=0.999?"1.0":S.fuc.toFixed(2);
   $("v_tgt").textContent=concStr(S.tgt);
+  $("v_mech").textContent=S.mech<=0?"none":fmtTime(S.mech*3600);
+  $("v_pconc").textContent=S.pconc<=0?"none":concStr(S.pconc);
+  $("v_pkd").textContent=S.pconc<=0?"—":(S.pkd<1000?S.pkd.toFixed(S.pkd<10?2:0)+" nM":(S.pkd/1000).toFixed(1)+" µM");
 }
 
 function update(){
@@ -768,17 +871,32 @@ function runAnim(){
   CUR.anim=requestAnimationFrame(step);
 }
 
-/* presets */
+/* presets. Three are real (a spec and two named compounds), two are archetypes.
+   Archetypes are styled dashed/italic so nobody quotes them as measured compounds;
+   named compounds carry a tooltip noting which values are estimates. */
+const base0={mech:0,pconc:0,pkd:100};
 const PRESETS=[
-  ["Our PAMPA set",{logPe:-7.8,kd:50,dose:1,inc:6,fu:1,er:1,fuc:1,tgt:2,thalf:2000,goal:60}],
-  ["Add 10% FBS",{logPe:-7.8,kd:50,dose:1,inc:6,fu:0.08,er:1,fuc:1,tgt:2,thalf:2000,goal:60}],
-  ["Efflux substrate",{logPe:-7.8,kd:50,dose:1,inc:6,fu:0.08,er:8,fuc:1,tgt:2,thalf:2000,goal:60}],
-  ["Cyclosporin-like",{logPe:-5.5,kd:50,dose:1,inc:6,fu:0.05,er:3,fuc:0.3,tgt:2,thalf:2000,goal:60}],
-  ["Abundant target",{logPe:-7.8,kd:50,dose:1,inc:6,fu:1,er:1,fuc:1,tgt:40,thalf:2000,goal:60}]
+  ["Goal for first hit",
+    {logPe:-7,kd:50,dose:2,inc:8,fu:0.8,er:1.2,fuc:1,tgt:0.05,thalf:2000,goal:80,...base0},
+    {kind:"spec",note:"Lemna internal spec — the load-state defaults."}],
+  ["Cyclosporin A",
+    {logPe:-5.5,kd:5,dose:2,inc:8,fu:0.06,er:3,fuc:0.3,tgt:2,thalf:2000,goal:80,...base0},
+    {kind:"named",note:"Cyclosporin A — literature values, partly estimated. Free fraction in medium and in cytosol are estimates, not measurements."}],
+  ["FR900359, Gq inhibitor",
+    {logPe:-6.5,kd:1,dose:1,inc:8,fu:0.2,er:1,fuc:0.3,tgt:0.5,thalf:2000,goal:80,...base0},
+    {kind:"named",note:"FR900359 (UBO-QIC), Gq inhibitor — literature values, partly estimated. Free fraction in medium and in cytosol are estimates, not measurements."}],
+  ["Tight but slow",
+    {logPe:-8.5,kd:1,dose:2,inc:8,fu:1,er:1,fuc:1,tgt:0.05,thalf:2000,goal:80,...base0},
+    {kind:"arch",note:"Archetype, not a real molecule: high affinity, low permeability — reaches the goal but only slowly."}],
+  ["Affinity-limited hit",
+    {logPe:-6,kd:2000,dose:2,inc:8,fu:1,er:1,fuc:1,tgt:0.05,thalf:2000,goal:80,...base0},
+    {kind:"arch",note:"Archetype, not a real molecule: permeable but weak — capped below goal by affinity, not transport."}]
 ];
-PRESETS.forEach(([name,cfg])=>{
+PRESETS.forEach(([name,cfg,meta])=>{
   const b=document.createElement("button");
   b.textContent=name;
+  if(meta&&meta.kind==="arch")b.className="arch";
+  if(meta&&meta.note)b.title=meta.note;
   b.onclick=()=>{Object.assign(S,cfg);writeControls();update();runAnim();};
   $("presets").appendChild(b);
 });
@@ -858,7 +976,7 @@ const INFO={
     <tr><td>Cyclosporin A</td><td>~3</td></tr><tr><td>Digoxin, reference substrate</td><td>7.7</td></tr>
     <tr><td>Charge-masked cyclic RGD prodrug</td><td>~20</td></tr></table>
     <p>Efflux is different in kind from every other loss. It makes the steady-state cytosol <em>lower</em> than the medium, rather than just slower to get there. It also speeds equilibration, because it adds to the total rate of leaving.</p>
-    <p>Two traps. Good PAMPA permeability does not predict a low ER &mdash; a survey of 47 semipeptidic macrocycles found high passive permeability throughout, yet cellular permeability governed by efflux. And ER is cell-line specific: Caco-2 and MDCK-MDR1 overexpress P-gp on purpose, while HEK293 and most HeLa lines express little. Measure it in the line you will actually use.</p>`},
+    <p>Two traps. Good PAMPA permeability does not predict a low ER &mdash; a survey of 47 semipeptidic macrocycles found high passive permeability throughout, yet cellular permeability governed by efflux. And ER is cell-line specific: Caco-2 and MDCK-MDR1 overexpress P-gp on purpose, while HEK293, HeLa, HCT116, A549 and MCF-7 show little or none. In a non-polarised line there is no apical side, so set this to 1 unless you have measured accumulation with and without elacridar.</p>`},
   fucell:{title:"Free versus total inside the cell",body:`
     <p>The fraction of intracellular drug that is unbound and available to the target. The rest is partitioned into internal membranes or bound non-specifically to protein.</p>
     <p>It slows loading, because every molecule sequestered has to be delivered across the membrane first. It does <strong>not</strong> change the final occupancy, because equilibrium is set by free concentration on each side.</p>
@@ -973,7 +1091,8 @@ const INFO={
   // attach an icon after each labelled control
   [["s_logPe","perm"],["s_kd","affinity"],["s_dose","dose"],["s_inc","incubation"],
    ["s_tgt","target"],["s_fu","serum"],["s_er","efflux"],["s_fuc","fucell"],
-   ["s_va","cellsize"],["s_thalf","stability"],["n_cells","reservoir"]].forEach(([forId,id])=>{
+   ["s_va","cellsize"],["s_thalf","stability"],["n_cells","reservoir"],
+   ["s_mech","mechanism_time"],["s_pconc","competition"]].forEach(([forId,id])=>{
     const lbl=document.querySelector(`label[for="${forId}"]`);if(!lbl)return;
     const wrap=document.createElement("span");wrap.className="lblwrap";
     lbl.parentNode.insertBefore(wrap,lbl);wrap.appendChild(lbl);

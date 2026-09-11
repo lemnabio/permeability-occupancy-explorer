@@ -4,8 +4,8 @@ Internal interactive tool (Lemna Bio). Given a cyclic peptide's permeability and
 affinity, it shows whether the compound reaches useful intracellular target
 occupancy inside a plate-based cellular assay — and what is actually limiting it.
 
-**Status: internal-only.** This build contains real measured PAMPA values in the
-`Our PAMPA set` preset. Do not host it on a world-readable URL as-is. See
+**Status: internal-only.** A Lemna team tool, not a public asset. It needs real
+access control at the host (SSO or host-level password), not an unlisted URL. See
 [Hosting](#hosting).
 
 ## Running it
@@ -34,7 +34,7 @@ in the page and `BRIEF.md` for the full specification.
 ### Regression contract — do not break
 
 Any change to `simulate()` must still pass these (V/A = 2 µm, dose 1 µM,
-serum-free, no efflux, trace target unless stated):
+serum-free, no efflux, trace target unless stated). All currently pass exactly:
 
 | Case | Expected |
 |---|---|
@@ -45,6 +45,16 @@ serum-free, no efflux, trace target unless stated):
 | fu 0.08 + ER 8 | ceiling 16.7%, goal 60% unreachable |
 | [T] 0.5 / 2 / 10 / 40 µM, logPe −7 | 60% at 13 min / 44 min / 3.5 h / 14 h, all settle at 95.2% |
 
+**Integrator.** `simulate()` steps the linearised ODE `dL/dt = a − b·L` with the
+exact `L(t+dt) = L∞ + (L−L∞)·e^(−b·dt)` (b uses the analytic slope of free wrt
+total), and finds the goal crossing analytically within the step. It is stable at
+any step size — a plain Euler step diverges above ~logPe −6. Do **not** swap it for
+Euler/RK, and re-run this table if you touch it.
+
+**Effective KD.** A competing partner shifts the apparent KD by
+`KD·(1 + [partner]/KD_partner)`; with no partner it is unchanged, so every case
+above and all prior behaviour are reproduced exactly.
+
 Do not "improve" the physics without checking this table.
 
 ## Hosting
@@ -53,15 +63,20 @@ Not wired yet (deliberate).
 
 **GitHub Pages will not keep this private.** On Free/Pro/Team plans a Pages site
 is world-readable by anyone with the URL even when the repo is private; access-
-controlled Pages needs GitHub Enterprise Cloud. Since this build carries real
-PAMPA data, do not deploy it to Pages until the preset is genericised.
+controlled Pages needs GitHub Enterprise Cloud. This is internal-only, so do not
+use Pages.
 
-For an internal build with real data, host behind an auth gate — e.g. Cloudflare
-Pages + Cloudflare Access (free for a small team, deploy-on-push). Decision pending.
+Host behind an auth gate — e.g. Cloudflare Pages + Cloudflare Access (free for a
+small team, deploy-on-push, custom subdomain under lemna.bio). Domain is an open
+decision for Moustafa.
 
-## Roadmap (from BRIEF.md)
+## State of the spec
 
-1. ~~Repo scaffold~~ / static hosting with deploy on push — *hosting pending*
-2. ~~URL-encoded shareable state~~ — done
-3. Mobile layout — charts not yet tuned for narrow screens
-4. Named presets per real target — pending public/internal + PAMPA decision
+Done: exponential integrator, competing-partner term, "Goal for first hit"
+defaults, five-control hierarchy with the rest in Advanced, goal-by-the-verdict
+with a live ceiling readout, near-ceiling warning, "assumes no efflux" flag,
+info-icon popovers (21 wired), mechanism-time marker, competing-partner inputs,
+labelled presets (archetypes styled distinctly), URL-encoded shareable state.
+
+Pending: access-controlled hosting + domain. Mobile is explicitly out of scope
+(desktop only).
