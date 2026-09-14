@@ -406,13 +406,20 @@ function freeFromTotal(L,tgt,kd,fuc){
 
 /* ---------- competitive shift of the apparent KD ----------
    A partner already bound to the target raises the free-drug concentration
-   needed to reach a given occupancy: KD_eff = KD · (1 + [partner]/KD_partner).
-   Partner conc is in uM, its KD in nM; both converted to nM for the ratio.
-   With no partner this returns KD unchanged, so nothing else moves. */
+   needed to reach a given occupancy: KD_eff = KD · (1 + [P]free / KD_partner).
+   The formula uses FREE partner, which is not the total: when the target is in
+   excess it sequesters most of the partner, free partner collapses, and the
+   penalty falls back to ~1. So we first solve the baseline (drug-free) target–
+   partner equilibrium  T + P ⇌ TP  for free partner, using the same target
+   concentration set on the slider. Everything in nM. With no partner (or no
+   target) this returns KD unchanged. */
 function effKD(p){
-  const pc=p.pconc||0, pk=p.pkd||0;
-  if(pc>0&&pk>0)return p.kd*(1+(pc*1000)/pk);
-  return p.kd;
+  const Tt=(p.tgt||0)*1000, Pt=(p.pconc||0)*1000, Kp=p.pkd||0; // nM
+  if(Pt<=0||Kp<=0)return p.kd;
+  const s=Tt+Pt+Kp;
+  const TP=0.5*(s-Math.sqrt(Math.max(0,s*s-4*Tt*Pt)));         // bound partner
+  const Pfree=Math.max(0,Pt-TP);
+  return p.kd*(1+Pfree/Kp);
 }
 
 /* ---------- simulate ---------- */
