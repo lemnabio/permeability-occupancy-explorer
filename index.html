@@ -1134,6 +1134,17 @@ const INFO={
     <p>It shifts the dose-response sideways; it does not lower the maximum. <strong>The penalty only bites when the partner is more abundant than the target</strong> — the formula uses <em>free</em> partner, and an excess target sequesters nearly all of it. It is large in the reverse case: a low-abundance client against an abundant hub (a 50 nM client of 14-3-3 costs 11× if it binds at 100 nM).</p>
     <h5>Effect 2 — an abundant target raises the occupancy you need</h5>
     <p>This one hurts, and it has nothing to do with your K<sub>D</sub>. When the target is in excess, only a sliver is engaged at any moment; to suppress the interaction you must drive <em>free target</em> below K<sub>D,partner</sub>, which happens only once you have occupied nearly all of it. β-catenin at 1 µM / TCF at 15 nM / K<sub>D</sub> 20 nM needs <strong>99.8%</strong> occupancy for a tenfold cut — while its competitive penalty is 1.01×.</p>
+    <h5>Kinds of PPI, and what they cost</h5>
+    <p>The useful axis is permanence, not interface shape. PPI affinities span more than ten orders of magnitude, pM to mM.</p>
+    <table><tr><th>Class</th><th>K<sub>D</sub></th><th>Examples</th></tr>
+    <tr><td>Obligate / permanent</td><td>pM–nM</td><td>tubulin, ribosomal subunits</td></tr>
+    <tr><td>Strong transient</td><td>nM</td><td>MDM2/p53, KEAP1/NRF2, β-catenin/TCF, BCL-2/BH3, menin/MLL</td></tr>
+    <tr><td>Weak transient</td><td>µM–mM</td><td>SH2, SH3, PDZ, 14-3-3, kinase docking</td></tr></table>
+    <p>Roughly 40% of PPIs run through short linear motifs (SLiMs) — 3–10 residue stretches binding a folded domain, interface around 500 Å², so typically 1–500 µM. Interface size predicts affinity only loosely: for a given buried area, measured K<sub>D</sub> varies over four orders of magnitude.</p>
+    <h5>What actually gets drugged</h5>
+    <p><strong>Strong transient</strong> is where the successful programmes are — MDM2, BCL-2, KEAP1, β-catenin, menin: a real dependency, still reversible. The catch is Effect 2, since these are often abundant relative to their partner, so the occupancy bar is high even when the penalty is negligible.</p>
+    <p><strong>Weak transient / SLiM-mediated</strong> is harder chemistry, easier competition. The partner falls off on its own, so you barely pay a penalty, but the sites are shallow and flat — the "undruggable" label. It is exactly the bucket a constrained macrocycle suits: a SLiM mimic with the conformational entropy pre-paid.</p>
+    <p><strong>Obligate / permanent</strong> is essentially never targeted by disruption — no therapeutic window. It shows up the other way round, where glues and degraders <em>create</em> interfaces rather than break them.</p>
     <h5>Lemna targets</h5>
     <table><tr><th>System</th><th>Penalty</th><th>Occ. for 90% block</th></tr>
     <tr><td>MDM2 / p53</td><td>1.1×</td><td>91%</td></tr>
@@ -1141,7 +1152,9 @@ const INFO={
     <tr><td>KEAP1 / NRF2</td><td>1.0×</td><td>99.0%</td></tr>
     <tr><td>β-catenin / TCF</td><td>1.0×</td><td>99.8%</td></tr></table>
     <p>Read the occupancy column, not the penalty: competition is nearly free for all four, and what separates them is abundance against partner affinity. MDM2 and KRAS are comfortable; KEAP1 and β-catenin are a genuinely different problem, an argument for a sub-nM binder or a degrader.</p>
-    <p><strong>This control applies Effect 1</strong> — the K<sub>D</sub> shift. Effect 2 you set yourself, through the occupancy goal. Numbers are estimates; local concentration and avidity make them a floor, not a ceiling.</p>`}
+    <p><strong>This control applies Effect 1</strong> — the K<sub>D</sub> shift. Effect 2 you set yourself, through the occupancy goal.</p>
+    <h5>What this model does not capture</h5>
+    <p><em>Local concentration.</em> Inside a complex, at a membrane, or in a condensate, the effective partner concentration can be orders of magnitude above the bulk number used here — a common reason a compound with clean biochemical potency does nothing in cells. <em>Avidity.</em> Multivalent partners (p53 and β-catenin each make several contacts) dissociate more slowly than a single-site K<sub>D</sub> implies. Both push the same way: the numbers here are a floor, not a ceiling. Abundances are estimates — KRAS is grounded (about 145 nM in HeLa), the rest are order-of-magnitude placeholders; replace them with values from your own line before setting a programme target.</p>`}
 };
 
 /* one shared popover, positioned under (or above) the clicked icon and clamped
