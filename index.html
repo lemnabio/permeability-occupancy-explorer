@@ -46,25 +46,50 @@ body{
 .shell{display:grid;grid-template-columns:322px 1fr;gap:34px;align-items:start}
 @media(max-width:940px){.shell{grid-template-columns:1fr}}
 
-/* ---------- controls ---------- */
-.grp{margin-bottom:26px}
-.grp > h2{font-size:13px;font-weight:600;margin:0 0 2px;letter-spacing:.01em}
-.grp > .hint{font-size:11.5px;color:var(--ink-35);margin:0 0 12px}
-.ctl{margin-bottom:15px}
-.ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:3px}
+/* ---------- control sections ---------- */
+.cgroup{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:16px 18px 8px;
+  margin-bottom:14px;position:relative}
+.cgroup.ess{border-left:3px solid var(--indigo)}
+.cgroup.comp{border-left:3px solid var(--teal)}
+.cgroup.adv{border-left:3px solid var(--rule);padding-bottom:16px}
+.cgroup-head{display:flex;gap:11px;align-items:flex-start;margin-bottom:14px;list-style:none}
+.cgroup-head::-webkit-details-marker{display:none}
+.cgroup-num{flex:none;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:600;color:#fff;background:var(--ink-35);margin-top:1px}
+.cgroup.ess .cgroup-num{background:var(--indigo)}
+.cgroup.comp .cgroup-num{background:var(--teal);color:var(--navy)}
+.cgroup-title h2{font-size:14px;font-weight:600;margin:0;letter-spacing:.01em;line-height:1.3}
+.cgroup-title p{font-size:11.5px;color:var(--ink-35);margin:3px 0 0;line-height:1.4}
+details.cgroup > summary.cgroup-head{cursor:pointer;margin-bottom:0}
+details.cgroup[open] > summary.cgroup-head{margin-bottom:14px}
+details.cgroup > summary.cgroup-head .cgroup-title h2::after{content:' +';color:var(--ink-35);font-weight:400}
+details.cgroup[open] > summary.cgroup-head .cgroup-title h2::after{content:' –'}
+
+/* ---------- one control (label + typable value + unit + slider) ---------- */
+.ctl{margin-bottom:14px}
+.ctl:last-child{margin-bottom:6px}
+.ctl-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:5px}
 .ctl label{font-size:12.5px;font-weight:400;color:var(--ink-60)}
-.ctl .val{font-size:13px;font-weight:500;color:var(--ink)}
-input[type=range]{width:100%;height:20px;background:transparent;cursor:pointer;-webkit-appearance:none;appearance:none;margin:0}
+.ctl-in{display:inline-flex;align-items:stretch;gap:4px;flex:none}
+.cval{width:62px;font-family:var(--sans);font-size:12.5px;font-weight:500;color:var(--ink);text-align:right;
+  border:1px solid var(--rule);background:#fff;border-radius:5px;padding:4px 7px;-moz-appearance:textfield}
+.cval::-webkit-outer-spin-button,.cval::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.cval:focus-visible{outline:2px solid var(--indigo);outline-offset:0}
+.cval:disabled{color:var(--ink-35);background:rgba(13,20,62,.03)}
+.cunit{font-family:var(--sans);font-size:12px;font-weight:400;color:var(--ink-60);border:1px solid var(--rule);
+  background:#fff;border-radius:5px;padding:4px 4px 4px 7px;cursor:pointer}
+.cunit:focus-visible{outline:2px solid var(--indigo);outline-offset:0}
+.csuf{display:inline-flex;align-items:center;font-size:12px;color:var(--ink-35);padding:0 3px;min-width:26px}
+.csub{font-size:11px;color:var(--ink-35);margin-top:3px;min-height:0}
+input[type=range]{width:100%;height:18px;background:transparent;cursor:pointer;-webkit-appearance:none;appearance:none;margin:0}
 input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--rule)}
 input[type=range]::-moz-range-track{height:2px;background:var(--rule)}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
   background:var(--indigo);margin-top:-6px;border:none}
 input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--indigo);border:none}
+.cgroup.comp input[type=range]::-webkit-slider-thumb{background:var(--teal)}
+.cgroup.comp input[type=range]::-moz-range-thumb{background:var(--teal)}
 input[type=range]:focus-visible{outline:2px solid var(--indigo);outline-offset:4px}
-.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.num{width:100%;font-family:var(--sans);font-size:13px;font-weight:400;color:var(--ink);
-  border:1px solid var(--rule);background:#fff;border-radius:4px;padding:5px 8px}
-.num:focus-visible{outline:2px solid var(--indigo);outline-offset:1px}
 
 /* ---------- hero panel ---------- */
 .hero{background:var(--navy);border-radius:14px;padding:24px 26px 20px;color:#fff;position:relative;overflow:hidden}
@@ -132,9 +157,12 @@ input[type=range]:focus-visible{outline:2px solid var(--indigo);outline-offset:4
 .hero .info:hover{border-color:var(--teal);color:#fff}
 .xcap{display:flex;align-items:center;gap:2px;margin:14px 0 -4px;font-size:11px;color:rgba(255,255,255,.5)}
 
-.infopop{position:absolute;z-index:200;max-width:min(330px,calc(100vw - 24px));width:max-content;
+.infopop{position:absolute;z-index:200;max-width:min(360px,calc(100vw - 24px));width:max-content;
+  max-height:min(72vh,600px);overflow-y:auto;
   background:#fff;color:var(--ink);border:1px solid var(--rule);border-radius:10px;
   box-shadow:0 12px 38px rgba(13,20,62,.20);padding:15px 17px;font-size:12.5px;line-height:1.5}
+.infopop h5{margin:14px 0 7px;font-size:12px;font-weight:600;color:var(--indigo)}
+.infopop h5:first-of-type{margin-top:4px}
 .infopop h4{margin:0 30px 8px 0;font-size:13px;font-weight:600}
 .infopop p{margin:0 0 9px}
 .infopop p:last-child,.infopop table:last-child,.infopop pre:last-child{margin-bottom:0}
@@ -192,37 +220,28 @@ details .body code{background:rgba(83,100,241,.09);color:var(--indigo);padding:1
 
   <!-- ================= CONTROLS ================= -->
   <div>
-    <div class="grp">
-      <h2>The essentials</h2>
-      <p class="hint">Two you measure, two you control — plus the one that most changes the timing.</p>
-      <div class="ctl"><div class="row"><label for="s_logPe">Permeability, logPe</label><span class="val" id="v_logPe"></span></div><input type="range" id="s_logPe" min="-9" max="-4" step="0.05"></div>
-      <div class="ctl"><div class="row"><label for="s_kd">Binding affinity, K<sub>D</sub></label><span class="val" id="v_kd"></span></div><input type="range" id="s_kd" min="0" max="1000"></div>
-      <div class="ctl"><div class="row"><label for="s_dose">Dose in medium</label><span class="val" id="v_dose"></span></div><input type="range" id="s_dose" min="0" max="1000"></div>
-      <div class="ctl"><div class="row"><label for="s_inc">Incubation</label><span class="val" id="v_inc"></span></div><input type="range" id="s_inc" min="0" max="1000"></div>
-      <div class="ctl"><div class="row"><label for="s_tgt">Target concentration</label><span class="val" id="v_tgt"></span></div><input type="range" id="s_tgt" min="0" max="1000"></div>
-    </div>
-
-    <details class="advanced">
-      <summary>Advanced — losses, cell system and plate setup</summary>
-      <div class="advbody">
-        <p class="hint">Losses act on concentration, not on speed. Efflux is the exception — it lowers the ceiling.</p>
-        <div class="ctl"><div class="row"><label for="s_fu">Free fraction in medium</label><span class="val" id="v_fu"></span></div><input type="range" id="s_fu" min="0" max="1000"></div>
-        <div class="ctl"><div class="row"><label for="s_er">Efflux ratio</label><span class="val" id="v_er"></span></div><input type="range" id="s_er" min="0" max="1000"></div>
-        <div class="ctl"><div class="row"><label for="s_fuc">Free fraction in cytosol</label><span class="val" id="v_fuc"></span></div><input type="range" id="s_fuc" min="0" max="1000"></div>
-        <div class="ctl"><div class="row"><label for="s_va">Cell volume / surface</label><span class="val" id="v_va"></span></div><input type="range" id="s_va" min="0.5" max="5" step="0.1"></div>
-        <div class="ctl"><div class="row"><label for="s_thalf">Stability in medium, t½</label><span class="val" id="v_thalf"></span></div><input type="range" id="s_thalf" min="0" max="1000"></div>
-        <div class="pair">
-          <div><div class="row"><label for="n_cells">Cells per well</label></div><input class="num" type="number" id="n_cells" min="100" step="1000"></div>
-          <div><div class="row"><label for="n_vol">Medium, µL</label></div><input class="num" type="number" id="n_vol" min="10" step="10"></div>
-        </div>
-
-        <p class="hint" style="margin-top:18px">The biology after engagement. Occupancy has to be held while the readout develops.</p>
-        <div class="ctl"><div class="row"><label for="s_mech">Mechanism time after readout</label><span class="val" id="v_mech"></span></div><input type="range" id="s_mech" min="0" max="96" step="0.25"></div>
-
-        <p class="hint" style="margin-top:18px">A PPI target is not empty. A bound partner raises the free drug you need.</p>
-        <div class="ctl"><div class="row"><label for="s_pconc">Competing partner concentration</label><span class="val" id="v_pconc"></span></div><input type="range" id="s_pconc" min="0" max="50" step="0.05"></div>
-        <div class="ctl"><div class="row"><label for="s_pkd">Partner affinity, K<sub>D</sub></label><span class="val" id="v_pkd"></span></div><input type="range" id="s_pkd" min="0" max="1000"></div>
+    <section class="cgroup ess">
+      <div class="cgroup-head">
+        <span class="cgroup-num">1</span>
+        <div class="cgroup-title"><h2>Essentials</h2><p>Two you measure, two you control — plus the one that most changes the timing.</p></div>
       </div>
+      <div class="cbody" id="g-ess"></div>
+    </section>
+
+    <section class="cgroup comp">
+      <div class="cgroup-head">
+        <span class="cgroup-num">2</span>
+        <div class="cgroup-title"><h2>Competition <button class="info" type="button" data-info="competition" aria-label="You are not binding an empty target">i</button></h2><p>A bound partner raises the free drug you need — and an abundant target raises the occupancy you need.</p></div>
+      </div>
+      <div class="cbody" id="g-comp"></div>
+    </section>
+
+    <details class="cgroup adv" id="advSection">
+      <summary class="cgroup-head">
+        <span class="cgroup-num">3</span>
+        <div class="cgroup-title"><h2>Advanced</h2><p>Losses, cell system, stability and plate setup.</p></div>
+      </summary>
+      <div class="cbody" id="g-adv"></div>
     </details>
   </div>
 
@@ -788,61 +807,118 @@ function syncGoalButtons(){
   goalBtns.forEach(b=>b.classList.toggle("active",+b.dataset.goal===Math.round(S.goal)));
 }
 
-function readControls(){
-  S.logPe=+$("s_logPe").value;
-  S.kd=M.kd.toVal(+$("s_kd").value);
-  S.thalf=M.thalf.toVal(+$("s_thalf").value);
-  S.dose=M.dose.toVal(+$("s_dose").value);
-  S.inc=M.inc.toVal(+$("s_inc").value);
-  S.va=+$("s_va").value;
-  S.fu=M.fu.toVal(+$("s_fu").value);
-  S.er=M.er.toVal(+$("s_er").value);
-  S.fuc=M.fuc.toVal(+$("s_fuc").value);
-  S.tgt=M.tgt.toVal(+$("s_tgt").value);
-  // goal is not a slider — it is driven by the quick-pick next to the verdict
-  S.cells=Math.max(100,+$("n_cells").value||20000);
-  S.vol=Math.max(10,+$("n_vol").value||100);
-  S.mech=+$("s_mech").value;
-  S.pconc=+$("s_pconc").value;
-  S.pkd=M.pkd.toVal(+$("s_pkd").value);
-}
-function writeControls(){
-  $("s_logPe").value=S.logPe;
-  $("s_kd").value=M.kd.toSlider(S.kd);
-  $("s_thalf").value=M.thalf.toSlider(S.thalf);
-  $("s_dose").value=M.dose.toSlider(S.dose);
-  $("s_inc").value=M.inc.toSlider(S.inc);
-  $("s_va").value=S.va;
-  $("s_fu").value=M.fu.toSlider(S.fu);
-  $("s_er").value=M.er.toSlider(S.er);
-  $("s_fuc").value=M.fuc.toSlider(S.fuc);
-  $("s_tgt").value=M.tgt.toSlider(S.tgt);
-  $("n_cells").value=Math.round(S.cells);
-  $("n_vol").value=Math.round(S.vol);
-  $("s_mech").value=S.mech;
-  $("s_pconc").value=S.pconc;
-  $("s_pkd").value=M.pkd.toSlider(S.pkd);
-}
-function labels(){
-  const Pe=Math.pow(10,S.logPe);
-  const m=Pe.toExponential(1).split("e");
-  $("v_logPe").innerHTML=S.logPe.toFixed(2)+" <span style=\"color:rgba(13,20,62,.45);font-weight:300\">"+m[0]+"\u00d710<sup>"+(+m[1])+"</sup> cm/s</span>";
-  $("v_kd").textContent=S.kd<1000?S.kd.toFixed(S.kd<10?2:0)+" nM":(S.kd/1000).toFixed(1)+" µM";
-  $("v_thalf").textContent=S.thalf>=1999?"stable":(S.thalf<1?(S.thalf*60).toFixed(0)+" min":S.thalf.toFixed(S.thalf<10?1:0)+" h");
-  $("v_dose").textContent=concStr(S.dose);
-  $("v_inc").textContent=fmtTime(S.inc*3600);
-  $("v_va").textContent=S.va.toFixed(1)+" µm";
-  $("v_fu").textContent=S.fu>=0.999?"1.0 (serum-free)":S.fu.toFixed(S.fu<0.01?3:2);
-  $("v_er").textContent=S.er<1.05?"1 (none)":S.er.toFixed(S.er<10?1:0)+"×";
-  $("v_fuc").textContent=S.fuc>=0.999?"1.0":S.fuc.toFixed(2);
-  $("v_tgt").textContent=concStr(S.tgt);
-  $("v_mech").textContent=S.mech<=0?"none":fmtTime(S.mech*3600);
-  $("v_pconc").textContent=S.pconc<=0?"none":concStr(S.pconc);
-  $("v_pkd").textContent=S.pconc<=0?"—":(S.pkd<1000?S.pkd.toFixed(S.pkd<10?2:0)+" nM":(S.pkd/1000).toFixed(1)+" µM");
+/* ================= CONTROL SYSTEM =================
+   Config-driven controls: each renders a label, a typable value with a unit
+   selector (where it has units), and a slider — all synced to S, the single
+   source of truth. Units are display-only; S always holds base units. */
+const UNITS={
+  conc:[["nM",0.001],["µM",1]],            // base µM
+  kd:[["pM",0.001],["nM",1],["µM",1000]],  // base nM
+  time:[["min",1/60],["h",1],["d",24]],    // base h
+  timeS:[["min",1/60],["h",1],["d",24],["stable",null]] // stability adds a 'stable' state
+};
+const CDEF={
+  logPe:{g:"ess",label:"Permeability, logPe",info:"perm",lin:[-9,-4,0.05],sci:true},
+  kd:{g:"ess",label:"Binding affinity, K<sub>D</sub>",info:"affinity",log:[0.05,10000],units:"kd",disp:"nM"},
+  dose:{g:"ess",label:"Dose in medium",info:"dose",log:[0.01,200],units:"conc",disp:"µM"},
+  inc:{g:"ess",label:"Incubation",info:"incubation",log:[0.083,48],units:"time",disp:"h"},
+  tgt:{g:"ess",label:"Target concentration",info:"target",log:[0.005,100],units:"conc",disp:"nM"},
+  pconc:{g:"comp",label:"Competing partner, [P]",info:null,lin:[0,50,0.05],units:"conc",disp:"µM",zero:"none — empty target"},
+  pkd:{g:"comp",label:"Partner affinity, K<sub>D</sub>",info:null,log:[0.05,10000],units:"kd",disp:"nM"},
+  fu:{g:"adv",label:"Free fraction in medium",info:"serum",log:[0.001,1],serumfree:true},
+  er:{g:"adv",label:"Efflux ratio",info:"efflux",log:[1,200],suf:"×",noefflux:true},
+  fuc:{g:"adv",label:"Free fraction in cytosol",info:"fucell",log:[0.01,1]},
+  va:{g:"adv",label:"Cell volume / surface",info:"cellsize",lin:[0.5,5,0.1],suf:"µm"},
+  thalf:{g:"adv",label:"Stability in medium, t½",info:"stability",log:[0.1,2000],units:"timeS",disp:"stable"},
+  mech:{g:"adv",label:"Mechanism time after readout",info:"mechanism_time",lin:[0,96,0.25],units:"time",disp:"h",zero:"none"},
+  cells:{g:"adv",label:"Cells per well",info:"reservoir",num:[100,1e9,1000]},
+  vol:{g:"adv",label:"Medium volume",info:null,num:[10,1e6,10],suf:"µL"}
+};
+const CORDER=Object.keys(CDEF);
+const DISP={}; CORDER.forEach(k=>{if(CDEF[k].units)DISP[k]=CDEF[k].disp;});
+const logmapC=(lo,hi)=>({toVal:s=>lo*Math.pow(hi/lo,s/1000),toSlider:v=>1000*Math.log(v/lo)/Math.log(hi/lo)});
+function factorOf(k,u){const p=(UNITS[CDEF[k].units]||[]).find(x=>x[0]===u);return p?p[1]:1;}
+function fmtNum(v){
+  if(!isFinite(v))return"";
+  if(v===0)return"0";
+  const a=Math.abs(v),d=a>=100?0:a>=10?1:a>=0.1?2:3;
+  return String(+v.toFixed(d));
 }
 
+function buildControls(){
+  CORDER.forEach(k=>{
+    const c=CDEF[k],host=$("g-"+c.g);if(!host)return;
+    let inHTML="";
+    if(c.units)inHTML=`<select class="cunit" aria-label="unit for ${k}">`+
+      UNITS[c.units].map(([u])=>`<option${u===DISP[k]?" selected":""}>${u}</option>`).join("")+`</select>`;
+    else if(c.suf)inHTML=`<span class="csuf">${c.suf}</span>`;
+    const info=c.info?` <button class="info" type="button" data-info="${c.info}" aria-label="${(INFO[c.info]||{}).title||c.info}">i</button>`:"";
+    const box=document.createElement("div");box.className="ctl";box.dataset.k=k;
+    box.innerHTML=
+      `<div class="ctl-top"><span class="lblwrap"><label>${c.label}</label>${info}</span>`+
+      `<span class="ctl-in"><input class="cval" type="number" inputmode="decimal">${inHTML}</span></div>`+
+      (c.num?"":`<input class="cslider" type="range">`)+`<div class="csub"></div>`;
+    host.appendChild(box);
+  });
+}
+
+function syncOne(k,skip){
+  const c=CDEF[k],box=document.querySelector('.ctl[data-k="'+k+'"]');if(!box)return;
+  const slider=box.querySelector(".cslider"),num=box.querySelector(".cval"),
+        unit=box.querySelector(".cunit"),sub=box.querySelector(".csub");
+  const base=S[k];
+  const stableNow=(c.units==="timeS"&&base>=1999);
+  if(c.units==="timeS")DISP[k]=stableNow?"stable":(DISP[k]==="stable"?"h":DISP[k]);
+  if(slider&&skip!=="slider"){
+    if(c.log){const[lo,hi]=c.log;slider.min=0;slider.max=1000;slider.step=1;slider.value=logmapC(lo,hi).toSlider(base);}
+    else if(c.lin){const[mn,mx,st]=c.lin;slider.min=mn;slider.max=mx;slider.step=st;slider.value=base;}
+  }
+  if(unit&&skip!=="unit")unit.value=DISP[k];
+  if(num&&skip!=="num"){
+    if(stableNow){num.value="";num.disabled=true;}
+    else{num.disabled=false;
+      const fac=c.units?factorOf(k,unit?unit.value:DISP[k]):1;
+      num.value=c.num?String(Math.round(base)):fmtNum(base/fac);}
+  }
+  if(sub){
+    let t="";
+    if(c.sci){const Pe=Math.pow(10,base),m=Pe.toExponential(1).split("e");t="= "+m[0]+"×10<sup>"+(+m[1])+"</sup> cm/s";}
+    else if(stableNow)t="no decay (treated as stable)";
+    else if(c.serumfree&&base>=0.999)t="serum-free";
+    else if(c.noefflux&&base<1.05)t="no efflux";
+    else if(c.zero&&base<=0)t=c.zero;
+    sub.innerHTML=t;
+  }
+}
+function renderAll(){CORDER.forEach(k=>syncOne(k));}
+
+function onCtlInput(e){
+  const box=e.target.closest(".ctl");if(!box)return;const k=box.dataset.k,c=CDEF[k];
+  if(e.target.classList.contains("cslider")){
+    const v=+e.target.value;
+    S[k]=clampVal(k,c.log?logmapC(c.log[0],c.log[1]).toVal(v):v);
+    syncOne(k,"slider");update();
+  }else if(e.target.classList.contains("cval")){
+    if(e.target.value===""||e.target.value==="-")return;
+    const n=parseFloat(e.target.value);if(!isFinite(n))return;
+    const unit=box.querySelector(".cunit");
+    const fac=c.units?factorOf(k,unit?unit.value:DISP[k]):1;
+    S[k]=clampVal(k,n*fac);
+    syncOne(k,"num");update();
+  }
+}
+function onCtlChange(e){
+  const box=e.target.closest(".ctl");if(!box)return;const k=box.dataset.k,c=CDEF[k];
+  if(e.target.classList.contains("cunit")){
+    const u=e.target.value;
+    if(c.units==="timeS"){ if(u==="stable")S[k]=2000; else if(S[k]>=1999)S[k]=24; }
+    DISP[k]=u;syncOne(k);update();
+  }else if(e.target.classList.contains("cval")){
+    syncOne(k,"slider"); // normalise the typed number to the clamped, formatted value
+  }
+}
 function update(){
-  readControls();labels();syncURL();syncGoalButtons();
+  syncURL();syncGoalButtons();
   CUR.sim=simulate(S);
   drawVerdict(S);
   drawCell(S,Math.min(1,fracOfIncubation()));
@@ -897,7 +973,7 @@ PRESETS.forEach(([name,cfg,meta])=>{
   b.textContent=name;
   if(meta&&meta.kind==="arch")b.className="arch";
   if(meta&&meta.note)b.title=meta.note;
-  b.onclick=()=>{Object.assign(S,cfg);writeControls();update();runAnim();};
+  b.onclick=()=>{Object.assign(S,cfg);renderAll();update();runAnim();};
   $("presets").appendChild(b);
 });
 
@@ -924,7 +1000,7 @@ $("presets").appendChild(shareBtn);
 goalBtns=[50,60,80,90].map(g=>{
   const b=document.createElement("button");
   b.type="button";b.textContent=g+"%";b.dataset.goal=g;
-  b.onclick=()=>{S.goal=g;writeControls();update();};
+  b.onclick=()=>{S.goal=g;update();};
   $("goalpick").appendChild(b);
   return b;
 });
@@ -1048,8 +1124,24 @@ const INFO={
     <tr><td>Proliferation, viability</td><td>72&ndash;96 h, with re-dosing</td></tr></table>
     <p>This is where stability stops being cosmetic. A peptide that reaches 80% at thirty minutes and is degraded by hour four gives a clean engagement result and a null phenotype, and the two are not in conflict.</p>`},
   competition:{title:"You are not binding an empty target",body:`
-    <p>A PPI target already has its partner bound. To displace it you need free drug above K<sub>D</sub> &times; (1 + [partner]/K<sub>D,partner</sub>), on top of the occupancy requirement.</p>
-    <p>A partner present at 1&nbsp;&micro;M binding at K<sub>D</sub> 100&nbsp;nM costs you elevenfold. This term is usually larger than the permeability penalty people spend their time worrying about, and it is the most common reason a compound with good biochemical potency does nothing in cells.</p>`}
+    <p>Your target already has something bound to it. That costs you in two separate ways, and for most real targets the second is much larger than the first.</p>
+    <h5>Effect 1 — the partner shifts your K<sub>D</sub></h5>
+    <p>Standard competitive binding: <code>K<sub>D,app</sub> = K<sub>D</sub> × (1 + [P]<sub>free</sub>/K<sub>D,partner</sub>)</code>. Call that multiplier the penalty. A 2× penalty means a 50 nM binder behaves as a 100 nM binder.</p>
+    <table><tr><th>Penalty</th><th>K<sub>D</sub> 50 nM becomes</th><th>Free drug for 80%</th></tr>
+    <tr><td>1×</td><td>50 nM</td><td>200 nM</td></tr>
+    <tr><td>2×</td><td>100 nM</td><td>400 nM</td></tr>
+    <tr><td>10×</td><td>500 nM</td><td>2 µM</td></tr></table>
+    <p>It shifts the dose-response sideways; it does not lower the maximum. <strong>The penalty only bites when the partner is more abundant than the target</strong> — the formula uses <em>free</em> partner, and an excess target sequesters nearly all of it. It is large in the reverse case: a low-abundance client against an abundant hub (a 50 nM client of 14-3-3 costs 11× if it binds at 100 nM).</p>
+    <h5>Effect 2 — an abundant target raises the occupancy you need</h5>
+    <p>This one hurts, and it has nothing to do with your K<sub>D</sub>. When the target is in excess, only a sliver is engaged at any moment; to suppress the interaction you must drive <em>free target</em> below K<sub>D,partner</sub>, which happens only once you have occupied nearly all of it. β-catenin at 1 µM / TCF at 15 nM / K<sub>D</sub> 20 nM needs <strong>99.8%</strong> occupancy for a tenfold cut — while its competitive penalty is 1.01×.</p>
+    <h5>Lemna targets</h5>
+    <table><tr><th>System</th><th>Penalty</th><th>Occ. for 90% block</th></tr>
+    <tr><td>MDM2 / p53</td><td>1.1×</td><td>91%</td></tr>
+    <tr><td>KRAS / SOS1</td><td>1.0×</td><td>91%</td></tr>
+    <tr><td>KEAP1 / NRF2</td><td>1.0×</td><td>99.0%</td></tr>
+    <tr><td>β-catenin / TCF</td><td>1.0×</td><td>99.8%</td></tr></table>
+    <p>Read the occupancy column, not the penalty: competition is nearly free for all four, and what separates them is abundance against partner affinity. MDM2 and KRAS are comfortable; KEAP1 and β-catenin are a genuinely different problem, an argument for a sub-nM binder or a degrader.</p>
+    <p><strong>This control applies Effect 1</strong> — the K<sub>D</sub> shift. Effect 2 you set yourself, through the occupancy goal. Numbers are estimates; local concentration and avidity make them a floor, not a ceiling.</p>`}
 };
 
 /* one shared popover, positioned under (or above) the clicked icon and clamped
@@ -1087,33 +1179,22 @@ const INFO={
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!pop.hidden)close();});
   addEventListener("resize",()=>{if(!pop.hidden)place();});
   addEventListener("scroll",()=>{if(!pop.hidden)place();},true);
-
-  // attach an icon after each labelled control
-  [["s_logPe","perm"],["s_kd","affinity"],["s_dose","dose"],["s_inc","incubation"],
-   ["s_tgt","target"],["s_fu","serum"],["s_er","efflux"],["s_fuc","fucell"],
-   ["s_va","cellsize"],["s_thalf","stability"],["n_cells","reservoir"],
-   ["s_mech","mechanism_time"],["s_pconc","competition"]].forEach(([forId,id])=>{
-    const lbl=document.querySelector(`label[for="${forId}"]`);if(!lbl)return;
-    const wrap=document.createElement("span");wrap.className="lblwrap";
-    lbl.parentNode.insertBefore(wrap,lbl);wrap.appendChild(lbl);
-    const b=document.createElement("button");
-    b.className="info";b.type="button";b.dataset.info=id;b.textContent="i";
-    b.setAttribute("aria-label",INFO[id].title);
-    wrap.appendChild(b);
-  });
 })();
 
-document.querySelectorAll("input").forEach(i=>i.addEventListener("input",update));
+/* control inputs are generated; wire them by delegation (typed values + units + sliders) */
+document.addEventListener("input",onCtlInput);
+document.addEventListener("change",onCtlChange);
 $("run").addEventListener("click",runAnim);
 
 /* someone pasting a new link, or using back/forward, re-hydrates the controls */
 window.addEventListener("hashchange",()=>{
-  if(applyStateFromURL()){writeControls();update();}
+  if(applyStateFromURL()){renderAll();update();}
 });
 
-/* boot: a shared link wins over the defaults */
+/* boot: build the controls, then let a shared link win over the defaults */
+buildControls();
 applyStateFromURL();
-writeControls();update();
+renderAll();update();
 </script>
 </body>
 </html>
